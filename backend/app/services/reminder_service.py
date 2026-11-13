@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.database import SessionLocal, utcnow
 from app.models import AdminReminderLog, Order, OrderStatus
+from app.services.otp import purge_old_otps
 
 logger = logging.getLogger("campusbite.reminders")
 
@@ -66,7 +67,11 @@ def generate_reminders(db: Session, threshold_minutes: int | None = None, restau
 
 def _run_once() -> int:
     with SessionLocal() as db:
-        return generate_reminders(db)
+        created = generate_reminders(db)
+        purged = purge_old_otps(db)  # housekeeping: drop OTP rows older than 24h
+        if purged:
+            logger.info("Purged %d old OTP code(s)", purged)
+        return created
 
 
 async def reminder_loop(stop_event: asyncio.Event) -> None:

@@ -16,13 +16,14 @@ The React frontend talks to a FastAPI backend over REST. Data lives in PostgreSQ
 2. [Features](#features)
 3. [Architecture](#architecture)
 4. [Quick start (Docker backend + local frontend)](#quick-start)
-5. [Environment variables](#environment-variables)
-6. [Database setup](#database-setup)
-7. [Running the backend without Docker](#running-the-backend-without-docker)
-8. [API documentation](#api-documentation)
-9. [Testing](#testing)
-10. [Security notes](#security-notes)
-11. [Project structure](#project-structure)
+5. [Authentication flow (email OTP)](#authentication-flow)
+6. [Environment variables](#environment-variables)
+7. [Database setup](#database-setup)
+8. [Running the backend without Docker](#running-the-backend-without-docker)
+9. [API documentation](#api-documentation)
+10. [Testing](#testing)
+11. [Security notes](#security-notes)
+12. [Project structure](#project-structure)
 
 ---
 
@@ -42,10 +43,10 @@ The React frontend talks to a FastAPI backend over REST. Data lives in PostgreSQ
 
 ### Authentication and RBAC
 - Register as a **Customer**, **Restaurant Owner** (creates the restaurant at sign-up) or **Delivery Partner**.
-- Passwords are hashed with bcrypt (cost 12). Login returns a JWT that the frontend stores in `localStorage` and sends as `Authorization: Bearer …`.
+- Passwords are hashed with bcrypt (cost 12). A 6-digit **email code (OTP)** is a second step: once to verify the email at sign-up, and on every login (configurable). Only then is a JWT issued, which the frontend stores in `localStorage` and sends as `Authorization: Bearer …`. See [Authentication flow](#authentication-flow).
 - **Every rule is enforced on the backend.** Role guards cover each endpoint, and every query is scoped by owner. Another user's resources return `404`, so their IDs can't be probed.
 - Protected React routes redirect by role. Expired sessions log out automatically.
-- Login brute-force throttling (per IP and email).
+- Brute-force throttling on login, code verification and resend (10 requests per 10 minutes per IP and email).
 
 ### Customer
 - Restaurant listing with search, cuisine chips and pagination.
@@ -79,7 +80,7 @@ The React frontend talks to a FastAPI backend over REST. Data lives in PostgreSQ
 - **Payment ledger**: append-only `PAYMENT` and `REFUND` rows with unique transaction references.
 - **Middleware** logs the method, path, status and duration of every request, adds `X-Request-ID` and `X-Process-Time-Ms`, adds security headers, and catches unhandled errors.
 - **Timezone-aware business days**: all day boundaries (date filters, "orders today", the 7-day chart, "spent this week") follow `APP_TIMEZONE`, so an order at 00:30 IST counts as that day, not the previous UTC day.
-- **Background task**: an asyncio scheduler (started in the app lifespan) scans every 60 s for stale orders and writes `admin_reminder_logs`. It deduplicates, and reminders auto-resolve when the order moves on.
+- **Background task**: an asyncio scheduler (started in the app lifespan) scans every 60 s for stale orders and writes `admin_reminder_logs`. It deduplicates, and reminders auto-resolve when the order moves on. The same job deletes email codes older than 24 hours.
 - Responsive UI (checked at 375 px and 1280 px) with light and dark themes (a sun/moon toggle in the navbar and a Light / Dark / System choice in the avatar menu, remembered per browser and applied before first paint), skeleton loaders, empty and error states with Retry, toasts, optimistic updates that roll back on failure, and confirmation for irreversible actions. Customers get a top nav on desktop and a bottom tab bar on phones; owners get a sidebar.
 
 ### Order lifecycle
@@ -102,7 +103,7 @@ PLACED ──► ACCEPTED ──► PREPARING ──► READY ──► ASSIGNED
                                          └──────────────────────────────────────────┘
 ```
 
-**Database tables:** `users`, `restaurants`, `menu_items`, `orders`, `order_items`, `order_status_history`, `reviews`, `payment_ledger`, `return_requests`, `admin_reminder_logs`.
+**Database tables:** `users`, `restaurants`, `menu_items`, `orders`, `order_items`, `order_status_history`, `reviews`, `payment_ledger`, `return_requests`, `admin_reminder_logs`, `otp_codes`.
 
 Key relationships:
 
@@ -163,7 +164,12 @@ Production build: `npm run build`, which outputs to `frontend/dist/`.
 
 ### Demo accounts (seeded)
 
-The password for every demo account is `CampusBite@123`.
+The password for every demo account is `CampusBite@123`. Demo accounts are **pre-verified**, but logging in still asks for a 6-digit code. Their inboxes don't exist, so with the default `OTP_DELIVERY=console` the code is printed in the backend logs:
+
+```bash
+docker compose logs -f backend | grep OTP
+# [OTP][login] to=customer@campusbite.dev code=048406
+```
 
 | Role | Email |
 |---|---|
@@ -186,6 +192,40 @@ docker compose up -d --build     # rebuild after backend code changes
 docker compose exec db psql -U campusbite -d campusbite   # SQL shell
 ```
 
+## Authentication flow
+
+```
+Sign up:  POST /auth/register ──► 6-digit code emailed ──► POST /auth/verify-email ──► verified + JWT
+Log in:   POST /auth/login (password) ──► code emailed ──► POST /auth/login/verify ──► JWT
+```
+
+- **Sign-up** never returns a token. The account stays unverified (and can't call any protected API) until the code is entered on `/verify`. Registering again with an unverified email replaces the details and sends a new code. A verified email gets `409`.
+- **Login** checks the bcrypt password first. A wrong email or password gets the same `401`. A correct password then sends a login code (`OTP_ON_LOGIN=true`). With `OTP_ON_LOGIN=false` the token is returned straight away, as before. An unverified account gets `403 verification_required` and a sign-up code instead.
+- **Codes:** 6 digits from `secrets`. Only a keyed SHA-256 hash is stored. They expire after 5 minutes, allow 5 wrong attempts, work once, and any newer code replaces the older one. Resend is allowed once every 60 seconds while a code is unused. Codes older than 24 hours are deleted by the background job.
+- **Frontend:** `/verify` has six auto-advancing boxes (paste and phone autofill supported) and auto-submits. The pending verification is kept in `sessionStorage`, so refreshing the page keeps you there with the resend countdown intact.
+- Owners' restaurants are hidden from customers, and riders can't be assigned orders, until the account is verified.
+
+### Where the codes go
+
+| `OTP_DELIVERY` | Behaviour |
+|---|---|
+| `console` (default) | The code is logged by the backend. Read it with `docker compose logs -f backend` and look for `[OTP][signup]` or `[OTP][login]`. Good for demos and evaluation. |
+| `email` | Sent by SMTP (STARTTLS) as an HTML email with a plain-text fallback. If `SMTP_USER` or `SMTP_PASSWORD` is missing, the backend logs a warning at startup and falls back to `console`. Sending happens in a background task, so a mail failure is logged and never breaks the request. |
+
+### Sending real email with Gmail
+
+1. Turn on 2-Step Verification for the Google account (Google Account → Security).
+2. Create an App Password: Google Account → Security → 2-Step Verification → **App passwords**. Name it "CampusBite" and copy the 16-character password.
+3. In the root `.env`:
+   ```
+   OTP_DELIVERY=email
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your.address@gmail.com
+   SMTP_PASSWORD=the-16-character-app-password
+   ```
+4. Run `docker compose up -d` to restart the backend. Never commit `.env`.
+
 ## Environment variables
 
 ### Root `.env` (read by Docker Compose and the backend container)
@@ -207,6 +247,16 @@ docker compose exec db psql -U campusbite -d campusbite   # SQL shell
 | `REMINDER_CHECK_INTERVAL_SECONDS` | no | `60` | Scheduler interval |
 | `APP_TIMEZONE` | no | `Asia/Kolkata` | Business timezone for "today", date filters, daily revenue chart and AI date questions (timestamps are stored in UTC) |
 | `LOG_LEVEL` | no | `INFO` | Logging level |
+| `OTP_DELIVERY` | no | `console` | `console` (codes in the backend logs) or `email` (SMTP) |
+| `OTP_ON_LOGIN` | no | `true` | Ask for an email code on every login. With `false`, login returns the token directly. |
+| `OTP_EXPIRY_MINUTES` | no | `5` | Code lifetime |
+| `OTP_MAX_ATTEMPTS` | no | `5` | Wrong guesses allowed per code |
+| `OTP_RESEND_SECONDS` | no | `60` | Resend cooldown |
+| `SMTP_HOST` / `SMTP_PORT` | for email | `smtp.gmail.com` / `587` | SMTP server (STARTTLS) |
+| `SMTP_USER` / `SMTP_PASSWORD` | for email | — | SMTP login (Gmail: your address and an App Password) |
+| `MAIL_FROM_NAME` | no | `CampusBite` | Sender display name |
+| `FRONTEND_URL` | no | `http://localhost:5173` | Shown in the email footer |
+| `AUTH_RATE_LIMIT` / `AUTH_RATE_WINDOW_SECONDS` | no | `10` / `600` | Requests per IP + email to login, verify and resend |
 
 `DATABASE_URL` is assembled by `docker-compose.yml` from the Postgres variables.
 
@@ -245,16 +295,19 @@ uvicorn app.main:app --reload --port 8000
 
 Interactive docs are at `http://localhost:8000/docs` (Swagger) and `/redoc`. To call protected endpoints from Swagger:
 
-1. Call `POST /api/auth/login`.
-2. Click **Authorize**.
-3. Paste the `access_token`.
+1. Call `POST /api/auth/login`. It replies `otp_required`.
+2. Read the code from `docker compose logs backend` and call `POST /api/auth/login/verify` with `{email, code}`.
+3. Click **Authorize** and paste the `access_token`.
 
 All routes are prefixed with `/api`. Lists return `{items, total, page, page_size, pages}` and accept `page` and `page_size` (maximum 100).
 
 | Method & path | Role | Description |
 |---|---|---|
-| `POST /auth/register` | public | Register (owners include a `restaurant` object) |
-| `POST /auth/login` | public | Log in and receive a JWT |
+| `POST /auth/register` | public | Register (owners include a `restaurant` object). Sends a sign-up code and returns `verification_required`, never a token. |
+| `POST /auth/verify-email` | public | `{email, code}` → marks the account verified and returns the JWT |
+| `POST /auth/login` | public | Password check → `otp_required` (code sent), `403 verification_required`, or the JWT when `OTP_ON_LOGIN=false` |
+| `POST /auth/login/verify` | public | `{email, code}` → JWT |
+| `POST /auth/otp/resend` | public | `{email, purpose}` → new code (same reply whether or not the account exists; `429` + `Retry-After` during the cooldown) |
 | `GET / PATCH /auth/me` | any | Current profile |
 | `GET /restaurants` | public | List restaurants (`q`, `cuisine`, `open_only`, `sort`) |
 | `GET /restaurants/cuisines` | public | Distinct cuisines |
@@ -312,9 +365,10 @@ cd backend && source .venv/bin/activate
 pytest -q
 ```
 
-44 tests cover:
+69 tests cover:
 
 - **Auth:** registration, login, hashing, token validation.
+- **Email OTP:** no token before verification, forged tokens for unverified users are rejected, single use, the attempt countdown and lockout, expiry, the resend cooldown and `Retry-After`, a new code invalidating the old one, identical `401`s, unverified versus verified login, `OTP_ON_LOGIN=false`, re-registration, email normalisation, rate limits, the email templates, and mail failures never breaking a request.
 - **RBAC:** role guards and cross-tenant isolation for customers, owners and riders.
 - **Orders:** server-side pricing, the full lifecycle, every invalid transition, cancel rules and auto-refund, and the order-list item preview staying scoped to the right user.
 - **Reviews and returns:** review and return rules.
@@ -326,7 +380,7 @@ pytest -q
 
 ### End-to-end UI test
 
-A Playwright script drives the real UI in Chrome across all three roles. Start the backend with demo data and run `npm run dev` first, then:
+A Playwright script drives the real UI in Chrome across all three roles. Start the backend with demo data and `OTP_DELIVERY=console`, and run `npm run dev` first. The script reads login codes from `docker compose logs backend`. Then:
 
 ```bash
 cd frontend
@@ -340,6 +394,7 @@ It covers this flow:
 3. Rider, on a 390 px phone, sees the tap-to-call card, picks up, confirms delivery, and finds the order in history.
 4. Customer reviews, requests a refund, and uses Reorder (re-quoted by the server).
 5. Owner approves the refund through the confirm step. The order becomes Refunded with a refund ledger entry.
+6. A new customer signs up: no token before the code, `/verify` survives a refresh, a wrong code shows the attempts left, and the right code logs in.
 
 It also checks role-based redirects, the mobile tab bar, dark mode with no horizontal overflow, the one-restaurant cart prompt, and that the theme toggle works before login, persists and applies without a flash. It fails on any browser console error.
 
@@ -352,8 +407,9 @@ Accessibility: every text/background token pair is at least 4.5:1 in both themes
 ## Security notes
 
 - Secrets (`.env`) are git-ignored. Only `.env.example` files are committed, and the Docker image excludes `.env`.
-- bcrypt hashing. Login responses don't reveal whether an email exists (constant-time path). Login and AI endpoints are rate limited.
-- JWTs require `sub`, `exp` and `iat`. The user is re-loaded from the database on each request, so deactivated users are rejected.
+- bcrypt hashing plus an email code. Login responses don't reveal whether an email exists (constant-time path), and resend replies the same either way. Login, code verification, resend and AI endpoints are rate limited.
+- OTP codes are stored only as keyed SHA-256 hashes, compared in constant time, single use, and locked after 5 wrong attempts. Passwords are never logged. Codes are logged only in `console` mode.
+- JWTs require `sub`, `exp` and `iat`. The user is re-loaded from the database on each request, so deactivated and unverified users are rejected.
 - Authorization is enforced server-side for every route and every row. Client-sent prices are ignored.
 - The container runs as a non-root user. The database port isn't published to the host.
 - AI answers are rendered with a safe Markdown renderer. No `dangerouslySetInnerHTML` is used.
@@ -376,7 +432,8 @@ campusbite/
 │   │   ├── models/           # SQLAlchemy models + enums
 │   │   ├── schemas/          # Pydantic request/response models
 │   │   ├── api/              # dependencies (auth/RBAC) + routers
-│   │   ├── services/         # order state machine, stats, reminders, AI, pagination
+│   │   ├── services/         # order state machine, stats, reminders, AI, OTP + mailer, pagination
+│   │   ├── templates/emails/ # OTP email (HTML + plain text)
 │   │   └── seed.py           # demo data
 │   └── tests/                # pytest suite
 └── frontend/

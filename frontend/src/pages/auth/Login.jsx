@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { errorMessage } from "../../api/client";
 import { Alert, Button, Field } from "../../components/ui";
 import { useAuth } from "../../context/AuthContext";
-import { ROLE_HOME } from "../../utils/constants";
+import { postLoginTarget, ROLE_HOME } from "../../utils/constants";
 import AuthLayout from "./AuthLayout";
 
 const DEMO = [
@@ -17,7 +17,7 @@ export default function Login() {
   const { login, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: location.state?.email || "", password: "" });
   const [errors, setErrors] = useState({});
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -34,17 +34,14 @@ export default function Login() {
     setError(null);
     setBusy(true);
     try {
-      const u = await login(form.email.trim(), form.password);
       const raw = location.state?.from;
-      // Same-origin relative paths only (blocks //evil.com and /\evil.com open redirects).
-      const from = typeof raw === "string" && /^\/(?![/\\])/.test(raw) ? raw : null;
-      // Only honour a redirect into an area the role can access.
-      const target = from && (u.role === "customer" ? !from.startsWith("/owner") && !from.startsWith("/delivery") : from.startsWith(ROLE_HOME[u.role]))
-        ? from
-        : ROLE_HOME[u.role];
-      navigate(target, { replace: true });
+      const res = await login(form.email.trim(), form.password, { redirect: raw });
+      if (res.status === "ok") navigate(postLoginTarget(res.user.role, raw), { replace: true });
+      else navigate("/verify"); // otp_required (login code) or verification_required (signup code)
     } catch (err) {
-      setError(errorMessage(err, "Login failed"));
+      const status = err.response?.status;
+      if (status === 429) setError("Too many attempts. Try again in a few minutes.");
+      else setError(errorMessage(err, "Login failed"));
     } finally {
       setBusy(false);
     }
@@ -55,7 +52,7 @@ export default function Login() {
       <h1 className="auth__title">Welcome back</h1>
       <p className="muted">Log in to continue to CampusBite.</p>
       <form className="stack auth__form" onSubmit={submit} noValidate>
-        <Alert>{error}</Alert>
+        <Alert polite>{error}</Alert>
         <Field label="Email" error={errors.email}>
           <input className="input" type="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         </Field>
@@ -68,6 +65,7 @@ export default function Login() {
       {SHOW_DEMO && (
         <div className="demo">
           <p className="text-sm strong">Demo accounts · password <code>CampusBite@123</code></p>
+          <p className="text-xs muted">Next you'll be asked for a 6-digit code. Demo inboxes don't exist, so in console mode the code is printed in the backend logs.</p>
           {DEMO.map(([label, email]) => (
             <button key={email} type="button" className="demo__row" onClick={() => setForm({ email, password: "CampusBite@123" })}>
               <span className="muted">{label}</span><span className="demo__email">{email}</span>

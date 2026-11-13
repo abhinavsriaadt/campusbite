@@ -39,10 +39,11 @@ export function ErrorState({ message, onRetry }) {
 
 const ALERT_ICON = { error: "alert", warning: "alert", info: "info", success: "check" };
 
-export function Alert({ type = "error", children, className = "" }) {
+/** `polite` announces the message without interrupting (role=status instead of role=alert). */
+export function Alert({ type = "error", children, className = "", polite = false }) {
   if (!children) return null;
   return (
-    <div className={`alert alert--${type} ${className}`} role={type === "error" ? "alert" : "status"}>
+    <div className={`alert alert--${type} ${className}`} role={type === "error" && !polite ? "alert" : "status"}>
       <Icon name={ALERT_ICON[type]} />
       <div className="grow">{children}</div>
     </div>

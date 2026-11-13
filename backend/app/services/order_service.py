@@ -253,7 +253,7 @@ def price_items(db: Session, restaurant_id: int, items) -> dict:
     settings = get_settings()
 
     restaurant = db.get(Restaurant, restaurant_id)
-    if restaurant is None:
+    if restaurant is None or not restaurant.owner.is_verified:
         raise HTTPException(status_code=404, detail="Restaurant not found")
     if not restaurant.is_open:
         raise _conflict("This restaurant is currently not accepting orders")
@@ -347,7 +347,7 @@ def cancel_order(db: Session, order: Order, user: User, reason: str | None) -> O
 
 def assign_partner(db: Session, order: Order, owner: User, partner_id: int) -> Order:
     partner = db.get(User, partner_id)
-    if partner is None or partner.role != R.DELIVERY_PARTNER or not partner.is_active:
+    if partner is None or partner.role != R.DELIVERY_PARTNER or not partner.is_active or not partner.is_verified:
         raise HTTPException(status_code=422, detail="Selected user is not an active delivery partner")
     if order.status == S.ASSIGNED:
         # Re-assignment before pickup.

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  OtpInput,
   Alert, Badge, Button, Card, CardHead, Chip, ConfirmDialog, DishCard, DishSkeleton, EmptyState, ErrorState, Field, FilterBar, Icon,
   ListSkeleton, Modal, OrderStepper, Pagination, PaymentBadge, QtyStepper, RatingChip, RestaurantCard, RestaurantCardSkeleton,
   ReturnBadge, Spinner, StarInput, Stars, StatCard, StatusBadge, Switch, Tabs, ThemeChoice, ThemeToggle, VegMark,
@@ -24,6 +25,7 @@ export default function Styleguide() {
   const [on, setOn] = useState(true);
   const [stars, setStars] = useState(4);
   const [tab, setTab] = useState("a");
+  const [otp, setOtp] = useState(["4", "2", "", "", "", ""]);
   const [modal, setModal] = useState(null);
   const [filters, setFilters] = useState({ status: "", date_from: "", date_to: "" });
 
@@ -71,6 +73,14 @@ export default function Styleguide() {
           <Field label="Textarea" className="full"><textarea className="textarea" /></Field>
         </div>
         <div className="search"><Icon name="search" /><input className="input" placeholder="Search" /></div>
+      </Section>
+
+      <Section title="Email code (OTP) input">
+        <div className="stack">
+          <OtpInput value={otp} onChange={setOtp} autoFocus={false} label="Example code" />
+          <OtpInput value={["1", "2", "3", "4", "5", "6"]} onChange={() => {}} autoFocus={false} success disabled label="Verified example" />
+          <OtpInput value={Array(6).fill("")} onChange={() => {}} autoFocus={false} invalid label="Invalid example" />
+        </div>
       </Section>
 
       <Section title="Chips & badges">

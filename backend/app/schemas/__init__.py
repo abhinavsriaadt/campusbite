@@ -47,6 +47,11 @@ class Message(BaseModel):
 Password = Annotated[str, Field(min_length=8, max_length=72)]
 
 
+def _norm_email(v):
+    """Emails are stored and compared trimmed + lowercased on every input."""
+    return v.strip().lower() if isinstance(v, str) else v
+
+
 class RestaurantCreateInline(BaseModel):
     name: str = Field(min_length=2, max_length=150)
     description: str | None = Field(default=None, max_length=2000)
@@ -68,11 +73,7 @@ class RegisterRequest(BaseModel):
     restaurant: RestaurantCreateInline | None = None
 
     _s = field_validator("name", "address", mode="before")(_strip)
-
-    @field_validator("email")
-    @classmethod
-    def _lower(cls, v: str) -> str:
-        return v.lower()
+    _e = field_validator("email", mode="before")(_norm_email)
 
     @field_validator("password")
     @classmethod
@@ -96,10 +97,40 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=1, max_length=72)
 
-    @field_validator("email")
-    @classmethod
-    def _lower(cls, v: str) -> str:
-        return v.lower()
+    _e = field_validator("email", mode="before")(_norm_email)
+
+
+OtpPurpose = Literal["signup", "login"]
+
+
+class VerifyCodeRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(pattern=r"^\d{6}$", description="The 6-digit code from the email")
+
+    _e = field_validator("email", mode="before")(_norm_email)
+    _c = field_validator("code", mode="before")(_strip)
+
+
+class ResendRequest(BaseModel):
+    email: EmailStr
+    purpose: OtpPurpose
+
+    _e = field_validator("email", mode="before")(_norm_email)
+
+
+class OtpChallenge(BaseModel):
+    """Returned instead of a token when an email code is still needed."""
+
+    status: Literal["verification_required", "otp_required"]
+    email: str = Field(description="Masked email the code was sent to, e.g. a***h@gmail.com")
+    purpose: OtpPurpose
+    resend_in: int = Field(description="Seconds until /auth/otp/resend will accept a request")
+    detail: str | None = None
+
+
+class ResendOut(BaseModel):
+    detail: str
+    resend_in: int
 
 
 class UserOut(ORMModel):

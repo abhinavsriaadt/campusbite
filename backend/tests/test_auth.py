@@ -1,6 +1,6 @@
 from app.core.database import SessionLocal
 from app.models import User
-from tests.conftest import register
+from tests.conftest import last_code, register
 
 
 def test_register_login_me(client):
@@ -9,6 +9,8 @@ def test_register_login_me(client):
     assert a.user["role"] == "customer"
 
     r = client.post("/api/auth/login", json={"email": "alice@example.com", "password": "Passw0rd!"})
+    assert r.status_code == 200 and r.json()["status"] == "otp_required"
+    r = client.post("/api/auth/login/verify", json={"email": "alice@example.com", "code": last_code("alice@example.com", "login")})
     assert r.status_code == 200
     token = r.json()["access_token"]
     me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})

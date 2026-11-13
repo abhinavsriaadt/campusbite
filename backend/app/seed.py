@@ -156,7 +156,8 @@ RIDERS = [
 
 
 def _user(db, name, email, role, phone=None, address=None) -> User:
-    u = User(name=name, email=email, password_hash=hash_password(DEMO_PASSWORD), role=role, phone=phone, address=address)
+    u = User(name=name, email=email, password_hash=hash_password(DEMO_PASSWORD), role=role, phone=phone, address=address,
+             is_verified=True)  # demo accounts are pre-verified
     db.add(u)
     db.flush()
     return u

@@ -9,6 +9,9 @@ const clean = (params = {}) =>
 export const authApi = {
   login: (body) => d(api.post("/auth/login", body)),
   register: (body) => d(api.post("/auth/register", body)),
+  verifyEmail: (body) => d(api.post("/auth/verify-email", body)),
+  verifyLogin: (body) => d(api.post("/auth/login/verify", body)),
+  resendOtp: (body) => d(api.post("/auth/otp/resend", body)),
   me: () => d(api.get("/auth/me")),
   updateMe: (body) => d(api.patch("/auth/me", body)),
 };

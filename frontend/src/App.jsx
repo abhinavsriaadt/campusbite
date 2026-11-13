@@ -6,6 +6,7 @@ import { EmptyState, PageLoader } from "./components/ui";
 import { ROLES } from "./utils/constants";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import Verify from "./pages/auth/Verify";
 import Restaurants from "./pages/customer/Restaurants";
 
 // Route-level code splitting: each role only downloads its own screens.
@@ -80,6 +81,7 @@ export default function App() {
       {/* Auth pages use their own split layout, without the app chrome. */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify" element={<Verify />} />
       <Route path="*" element={<Shell />} />
     </Routes>
   );

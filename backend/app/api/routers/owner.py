@@ -128,7 +128,7 @@ def list_delivery_partners(_: OwnerUser, db: DbSession):
     rows = db.execute(
         select(User.id, User.name, User.phone, active, done)
         .outerjoin(Order, Order.delivery_partner_id == User.id)
-        .where(User.role == UserRole.DELIVERY_PARTNER, User.is_active.is_(True))
+        .where(User.role == UserRole.DELIVERY_PARTNER, User.is_active.is_(True), User.is_verified.is_(True))
         .group_by(User.id, User.name, User.phone)
         .order_by(active.asc(), User.name.asc())
     ).all()

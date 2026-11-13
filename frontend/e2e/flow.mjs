@@ -2,6 +2,8 @@
  * CampusBite end-to-end smoke test — drives the real UI across all three roles.
  *
  *   Prereqs: backend running with demo data (SEED_DEMO_DATA=true) and `npm run dev`.
+ *            Logins use the email-OTP step, so the backend must run with OTP_DELIVERY=console:
+ *            codes are read from `docker compose logs backend` (override with E2E_LOGS_CMD).
  *   Run:     npm run e2e
  *
  * Env:
@@ -10,6 +12,7 @@
  *   E2E_HEADED=1   show the browser
  * Screenshots are written to e2e/screenshots/ (git-ignored).
  */
+import { execSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { chromium } from "playwright-core";
 
@@ -23,8 +26,36 @@ const ACCOUNTS = {
   rider: "rider@campusbite.dev",
 };
 
+const ROOT = new URL("../../", import.meta.url).pathname;
+const LOGS_CMD = process.env.E2E_LOGS_CMD || "docker compose logs backend --since 15m";
+
 mkdirSync(OUT, { recursive: true });
+
+/** All console-mode OTP codes logged for (email, purpose), oldest first. */
+function otpCodes(email, purpose) {
+  const logs = execSync(LOGS_CMD, { cwd: ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const re = new RegExp(`\\[OTP\\]\\[${purpose}\\] to=${email.replace(/[.+]/g, "\\$&")} code=(\\d{6})`, "g");
+  return [...logs.matchAll(re)].map((m) => m[1]);
+}
+
+/** Wait for a code newer than the `before` count; if none was sent (resend cooldown), use the latest. */
+async function otpCode(email, purpose, before) {
+  for (let i = 0; i < 40; i++) {
+    const codes = otpCodes(email, purpose);
+    if (codes.length > before) return codes.at(-1);
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  const codes = otpCodes(email, purpose);
+  if (codes.length) return codes.at(-1);
+  throw new Error(`no ${purpose} code for ${email} in the backend logs (is OTP_DELIVERY=console?)`);
+}
+
+async function enterCode(page, code) {
+  await page.locator(".otp__box").first().click();
+  await page.keyboard.type(code);
+}
 const consoleErrors = [];
+let expect400 = false; // set while deliberately entering a wrong OTP (the browser logs the 400)
 let passed = 0;
 
 const browser = await chromium.launch({ executablePath: CHROME, headless: !process.env.E2E_HEADED });
@@ -33,14 +64,22 @@ async function session(email, viewport = { width: 1366, height: 900 }, colorSche
   const ctx = await browser.newContext({ viewport, colorScheme });
   const page = await ctx.newPage();
   page.setDefaultTimeout(15000);
-  page.on("console", (m) => m.type() === "error" && consoleErrors.push(`[${email || "guest"}] ${m.text()}`));
+  page.on("console", (m) => {
+    if (m.type() !== "error" || (expect400 && m.text().includes("status of 400"))) return;
+    consoleErrors.push(`[${email || "guest"}] ${m.text()}`);
+  });
   page.on("pageerror", (e) => consoleErrors.push(`[${email || "guest"}] PAGEERROR ${e.message}`));
   if (email) {
     await page.goto(`${BASE}/login`);
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Password").fill(PW);
+    const before = otpCodes(email, "login").length;
     await page.getByRole("button", { name: "Log in" }).click();
     await page.waitForURL((u) => !u.pathname.startsWith("/login"));
+    if (new URL(page.url()).pathname === "/verify") {
+      await enterCode(page, await otpCode(email, "login", before));
+      await page.waitForURL((u) => u.pathname !== "/verify");
+    }
   }
   return { ctx, page };
 }
@@ -216,6 +255,32 @@ try {
   await page.reload();
   if (await page.evaluate(() => window.__themeAtFirstState) !== "dark") throw new Error("dark theme not set before first paint");
   ok("theme toggle works before login, persists, and is applied before React mounts (no flash)");
+  await ctx.close();
+
+  // 9. Sign-up with email OTP: no token until verified; /verify survives refresh -------------
+  ({ ctx, page } = await session(null, { width: 375, height: 812 }, "dark"));
+  const newEmail = `e2e.${Date.now().toString(36)}@example.com`;
+  await page.goto(`${BASE}/register`);
+  await page.getByLabel("Full name").fill("E2E Signup");
+  await page.getByLabel("Email").fill(newEmail);
+  await page.getByLabel("Password", { exact: true }).fill("E2eSignup1");
+  await page.getByLabel("Confirm password").fill("E2eSignup1");
+  await page.getByRole("button", { name: "Create account" }).click();
+  await page.waitForURL(`${BASE}/verify`);
+  if (await page.evaluate((k) => localStorage.getItem(k), "campusbite_token")) throw new Error("token stored before verification");
+  await page.reload();
+  await page.getByRole("heading", { name: "Verify your email" }).waitFor();
+  const signupCode = await otpCode(newEmail, "signup", 0);
+  expect400 = true;
+  await enterCode(page, signupCode === "000000" ? "111111" : "000000");
+  await page.getByText("Incorrect code. 4 attempts left.").waitFor();
+  expect400 = false;
+  if (!(await noOverflow(page))) throw new Error("horizontal overflow on /verify at 375px");
+  await shot(page, "09-verify-invalid-dark");
+  await enterCode(page, signupCode);
+  await page.getByText("Verified", { exact: true }).waitFor();
+  await page.waitForURL(`${BASE}/`);
+  ok("sign-up: no token before the code, /verify survives refresh, wrong code counts down, right code logs in");
   await ctx.close();
 } catch (err) {
   console.error(`\n✗ FAILED after ${passed} passing step(s): ${err.message}`);

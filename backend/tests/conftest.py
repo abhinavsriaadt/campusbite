@@ -6,7 +6,9 @@ os.environ["DATABASE_URL"] = f"sqlite:///{_tmpdir}/test.db"
 os.environ["JWT_SECRET_KEY"] = "test-secret-key-that-is-long-enough-123456"
 os.environ["ENABLE_REMINDER_SCHEDULER"] = "false"
 os.environ["OPENAI_API_KEY"] = ""
-os.environ["LOGIN_RATE_LIMIT_PER_MINUTE"] = "1000"
+os.environ["AUTH_RATE_LIMIT"] = "1000"
+os.environ["OTP_DELIVERY"] = "console"
+os.environ["OTP_ON_LOGIN"] = "true"
 os.environ["BCRYPT_ROUNDS"] = "4"
 
 import pytest  # noqa: E402
@@ -14,7 +16,8 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 from app.core.config import get_settings  # noqa: E402
 from app.core.database import Base, SessionLocal, engine  # noqa: E402
-from app.core.rate_limit import ai_rate_limiter, login_rate_limiter  # noqa: E402
+from app.core.rate_limit import ai_rate_limiter, auth_rate_limiter  # noqa: E402
+from app.services import mailer  # noqa: E402
 from app.main import app  # noqa: E402
 
 
@@ -23,8 +26,31 @@ def _fresh_db():
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     ai_rate_limiter.reset()
-    login_rate_limiter.reset()
+    auth_rate_limiter.reset()
+    OUTBOX.clear()
     yield
+
+
+# Every OTP "sent" during a test, newest last: (email, purpose, code). The real console
+# delivery still runs, so the log line is exercised too.
+OUTBOX: list[tuple[str, str, str]] = []
+_real_deliver = mailer.deliver_otp
+
+
+@pytest.fixture(autouse=True)
+def _capture_otps(monkeypatch):
+    def capture(email, name, purpose, code):
+        OUTBOX.append((email, purpose, code))
+        _real_deliver(email, name, purpose, code)
+
+    monkeypatch.setattr(mailer, "deliver_otp", capture)
+
+
+def last_code(email, purpose="signup"):
+    for e, p, c in reversed(OUTBOX):
+        if e == email.strip().lower() and p == purpose:
+            return c
+    raise AssertionError(f"no {purpose} code sent to {email}")
 
 
 @pytest.fixture
@@ -72,7 +98,10 @@ def register(client, email, role="customer", **extra):
         body["restaurant"] = {"name": f"{email.split('@')[0]} Kitchen", "cuisine": "Indian"}
     r = client.post("/api/auth/register", json=body)
     assert r.status_code == 201, r.text
-    return Actor(client, r.json())
+    assert "access_token" not in r.json()
+    v = client.post("/api/auth/verify-email", json={"email": email, "code": last_code(email)})
+    assert v.status_code == 200, v.text
+    return Actor(client, v.json())
 
 
 @pytest.fixture

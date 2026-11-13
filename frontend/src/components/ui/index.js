@@ -13,3 +13,4 @@ export {
   Avatar, Card, CardHead, FoodImage, RatingChip, StarInput, Stars, StatCard, Switch, Tabs, VegMark, initialsOf,
 } from "./Misc";
 export { ThemeChoice, ThemeToggle } from "./Theme";
+export { default as OtpInput } from "./OtpInput";
