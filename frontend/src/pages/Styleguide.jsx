@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   Alert, Badge, Button, Card, CardHead, Chip, ConfirmDialog, DishCard, DishSkeleton, EmptyState, ErrorState, Field, FilterBar, Icon,
   ListSkeleton, Modal, OrderStepper, Pagination, PaymentBadge, QtyStepper, RatingChip, RestaurantCard, RestaurantCardSkeleton,
-  ReturnBadge, Spinner, StarInput, Stars, StatCard, StatusBadge, Switch, Tabs, VegMark,
+  ReturnBadge, Spinner, StarInput, Stars, StatCard, StatusBadge, Switch, Tabs, ThemeChoice, ThemeToggle, VegMark,
 } from "../components/ui";
 import { useToast } from "../context/ToastContext";
 import { ALL_STATUSES } from "../utils/status";
@@ -31,10 +31,16 @@ export default function Styleguide() {
     <div className="sg">
       <div className="page-head"><div><h1>Styleguide</h1><p>Every component and state, built from tokens. Dev-only route.</p></div></div>
 
+      <Section title="Theme">
+        <div className="row"><ThemeToggle /><div className="sg__theme"><ThemeChoice /></div></div>
+        <p className="text-sm muted">Stored in localStorage as <code>cb_theme</code>. "System" follows the OS setting live.</p>
+      </Section>
+
       <Section title="Colour tokens">
         <div className="sg__swatches">
-          {["brand-500", "brand-600", "brand-50", "ink-900", "ink-700", "ink-500", "ink-300", "line", "bg", "surface",
-            "success", "success-50", "warning", "warning-50", "danger", "danger-50", "info", "info-50", "veg", "nonveg"].map((t) => (
+          {["brand-500", "brand-600", "brand-50", "brand-text", "brand-fill", "on-brand", "ink-900", "ink-700", "ink-500", "ink-300", "line", "bg", "surface", "surface-2",
+            "success", "success-50", "success-text", "warning", "warning-50", "warning-text", "danger", "danger-50", "danger-text",
+            "info", "info-50", "info-text", "neutral-50", "neutral-text", "veg", "nonveg"].map((t) => (
             <div key={t} className="sg__swatch"><span style={{ background: `var(--${t})` }} /><code>--{t}</code></div>
           ))}
         </div>

@@ -263,3 +263,4 @@
 .toolbar .search { flex: 1 1 100%; }
 @media (min-width: 768px) { .toolbar .search { flex: 1 1 240px; } }
 .ai > .alert { margin-bottom: var(--s-4); }
+.sg__theme { width: 260px; max-width: 100%; }

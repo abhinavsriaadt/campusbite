@@ -108,6 +108,8 @@
   border: 1px solid var(--line); min-width: 0;
   transition: var(--theme-transition);
 }
+/* Dark mode draws the edge with the hairline shadow (DESIGN.md §2); drop the border so it isn't doubled. */
+[data-theme="dark"] .card { border-color: transparent; }
 .card--pad { padding: var(--s-4); }
 @media (min-width: 768px) { .card--pad { padding: var(--s-5); } }
 .card--interactive { transition: var(--theme-transition), box-shadow var(--t-base) var(--ease), transform var(--t-base) var(--ease); color: inherit; display: block; }
@@ -135,7 +137,7 @@
 /* ================================================================ RestaurantCard */
 .rcard { overflow: hidden; }
 .rcard .food-img { border-radius: var(--r-lg) var(--r-lg) 0 0; }
-.rcard .food-img::after { content: ""; position: absolute; inset: 0; background: var(--img-scrim); pointer-events: none; }
+.rcard .food-img:has(img.is-loaded)::after { content: ""; position: absolute; inset: 0; background: var(--img-scrim); pointer-events: none; }
 .rcard__body { padding: var(--s-3) var(--s-4) var(--s-4); display: flex; flex-direction: column; gap: var(--s-1); }
 .rcard__name { font-size: var(--fs-md); font-weight: 600; color: var(--ink-900); }
 .rcard__meta { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; font-size: var(--fs-xs); color: var(--ink-500); margin-top: var(--s-1); }
