@@ -84,6 +84,7 @@
   --skel-hi: rgba(255,255,255,.6);
   --cartbar-shadow: var(--shadow-3);
   --toast-bg: var(--ink-900); --toast-fg: var(--surface);
+  --switch-knob: var(--surface);
   --theme-transition: background-color var(--t-base), color var(--t-base), border-color var(--t-base);
   --z-nav: 40; --z-bar: 45; --z-modal: 60; --z-toast: 70;
 
@@ -129,6 +130,7 @@
   --skel-hi: var(--line);
   --cartbar-shadow: 0 -8px 24px rgba(0,0,0,.5);
   --toast-bg: var(--surface-2); --toast-fg: var(--ink-900);
+  --switch-knob: var(--ink-900);
 }
 
 @media (prefers-reduced-motion: reduce) {

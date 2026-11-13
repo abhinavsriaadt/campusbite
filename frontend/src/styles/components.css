@@ -109,7 +109,7 @@
   transition: var(--theme-transition);
 }
 /* Dark mode draws the edge with the hairline shadow (DESIGN.md §2); drop the border so it isn't doubled. */
-[data-theme="dark"] .card { border-color: transparent; }
+:where([data-theme="dark"]) .card { border-color: transparent; }   /* low specificity: stale/live borders still win */
 .card--pad { padding: var(--s-4); }
 @media (min-width: 768px) { .card--pad { padding: var(--s-5); } }
 .card--interactive { transition: var(--theme-transition), box-shadow var(--t-base) var(--ease), transform var(--t-base) var(--ease); color: inherit; display: block; }
@@ -307,7 +307,7 @@
 .switch { position: relative; display: inline-flex; width: 44px; height: 26px; flex: none; cursor: pointer; }
 .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: inherit; }
 .switch__track { width: 100%; height: 100%; border-radius: var(--r-pill); background: var(--ink-300); transition: background var(--t-base) var(--ease); }
-.switch__track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); box-shadow: var(--shadow-1); transition: transform var(--t-base) var(--ease); }
+.switch__track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--switch-knob); box-shadow: var(--shadow-1); transition: transform var(--t-base) var(--ease); }
 .switch input:checked + .switch__track { background: var(--success-fill); }
 .switch input:checked + .switch__track::after { transform: translateX(18px); }
 .switch input:focus-visible + .switch__track { box-shadow: var(--focus-ring), 0 0 0 1px var(--brand-500); }

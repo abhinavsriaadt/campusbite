@@ -154,6 +154,10 @@
 .statusbar { display: grid; grid-template-columns: 130px 1fr 32px; align-items: center; gap: var(--s-3); }
 .statusbar__track { height: 8px; border-radius: var(--r-pill); background: var(--neutral-50); overflow: hidden; }
 .statusbar__fill { display: block; height: 100%; border-radius: var(--r-pill); background: var(--brand-500); }
+.statusbar__fill--info { background: var(--info); }
+.statusbar__fill--warning { background: var(--warning); }
+.statusbar__fill--success { background: var(--success); }
+.statusbar__fill--grey { background: var(--ink-300); }
 .statusbar .num { text-align: right; }
 
 /* ---------------------------------------------------------------- owner kanban */

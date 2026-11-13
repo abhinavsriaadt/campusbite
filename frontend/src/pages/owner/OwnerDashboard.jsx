@@ -135,7 +135,7 @@ export default function OwnerDashboard() {
                 return (
                   <div key={k} className="statusbar">
                     <span className="text-sm muted">{STATUS_META[k].label}</span>
-                    <span className="statusbar__track"><span className="statusbar__fill" style={{ width: `${(v / max) * 100}%` }} /></span>
+                    <span className="statusbar__track"><span className={`statusbar__fill statusbar__fill--${STATUS_META[k].tone}`} style={{ width: `${(v / max) * 100}%` }} /></span>
                     <span className="num strong">{v}</span>
                   </div>
                 );
