@@ -1,0 +1,125 @@
+import { useState } from "react";
+import {
+  Alert, Badge, Button, Card, CardHead, Chip, ConfirmDialog, DishCard, DishSkeleton, EmptyState, ErrorState, Field, FilterBar, Icon,
+  ListSkeleton, Modal, OrderStepper, Pagination, PaymentBadge, QtyStepper, RatingChip, RestaurantCard, RestaurantCardSkeleton,
+  ReturnBadge, Spinner, StarInput, Stars, StatCard, StatusBadge, Switch, Tabs, VegMark,
+} from "../components/ui";
+import { useToast } from "../context/ToastContext";
+import { ALL_STATUSES } from "../utils/status";
+
+/** Dev-only catalogue of every UI component and state (DESIGN.md §8). Not routed in production builds. */
+const IMG = "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=70";
+const DISH = { id: 1, name: "Margherita Pizza", price: 299, is_veg: true, is_available: true, description: "San Marzano tomato, mozzarella and basil, baked in a wood-fired oven until blistered.", image_url: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=400&q=70" };
+const now = Date.now();
+const iso = (minAgo) => new Date(now - minAgo * 60000).toISOString();
+const HISTORY = ["PLACED", "ACCEPTED", "PREPARING"].map((s, i) => ({ id: i, to_status: s, created_at: iso(40 - i * 10) }));
+
+const Section = ({ title, children }) => (
+  <section className="sg__section"><h2>{title}</h2><div className="sg__body">{children}</div></section>
+);
+
+export default function Styleguide() {
+  const toast = useToast();
+  const [qty, setQty] = useState(1);
+  const [on, setOn] = useState(true);
+  const [stars, setStars] = useState(4);
+  const [tab, setTab] = useState("a");
+  const [modal, setModal] = useState(null);
+  const [filters, setFilters] = useState({ status: "", date_from: "", date_to: "" });
+
+  return (
+    <div className="sg">
+      <div className="page-head"><div><h1>Styleguide</h1><p>Every component and state, built from tokens. Dev-only route.</p></div></div>
+
+      <Section title="Colour tokens">
+        <div className="sg__swatches">
+          {["brand-500", "brand-600", "brand-50", "ink-900", "ink-700", "ink-500", "ink-300", "line", "bg", "surface",
+            "success", "success-50", "warning", "warning-50", "danger", "danger-50", "info", "info-50", "veg", "nonveg"].map((t) => (
+            <div key={t} className="sg__swatch"><span style={{ background: `var(--${t})` }} /><code>--{t}</code></div>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Type scale">
+        {["3xl", "2xl", "xl", "lg", "md", "sm", "xs"].map((s) => <p key={s} style={{ fontSize: `var(--fs-${s})` }}>--fs-{s} · ₹1,234.50</p>)}
+      </Section>
+
+      <Section title="Buttons">
+        <div className="row">
+          <Button variant="primary">Primary</Button><Button variant="secondary">Secondary</Button><Button variant="ghost">Ghost</Button>
+          <Button variant="danger">Danger</Button><Button variant="danger-outline">Danger outline</Button><Button variant="success">Success</Button>
+        </div>
+        <div className="row">
+          <Button variant="primary" loading>Loading</Button><Button variant="secondary" disabled>Disabled</Button>
+          <Button variant="primary" size="sm" icon="plus">Small</Button><Button variant="primary" size="lg" iconRight="arrowRight">Large</Button>
+          <Button variant="ghost" iconOnly icon="edit" aria-label="Edit" />
+        </div>
+      </Section>
+
+      <Section title="Inputs">
+        <div className="form-grid">
+          <Field label="Default" hint="Helper text"><input className="input" placeholder="Placeholder" /></Field>
+          <Field label="With error" error="Price must be more than ₹0"><input className="input" defaultValue="0" /></Field>
+          <Field label="Select"><select className="select"><option>Option</option></select></Field>
+          <Field label="Disabled"><input className="input" disabled value="Disabled" /></Field>
+          <Field label="Textarea" className="full"><textarea className="textarea" /></Field>
+        </div>
+        <div className="search"><Icon name="search" /><input className="input" placeholder="Search" /></div>
+      </Section>
+
+      <Section title="Chips & badges">
+        <div className="row">{ALL_STATUSES.map((s) => <StatusBadge key={s} status={s} />)}</div>
+        <div className="row"><PaymentBadge status="mock_paid" /><PaymentBadge status="refunded" /><ReturnBadge status="pending" /><ReturnBadge status="approved" /><ReturnBadge status="rejected" /><Badge tone="info">Info</Badge></div>
+        <div className="row"><Chip>Default</Chip><Chip active>Active</Chip><Chip count={3}>With count</Chip><RatingChip value={4.4} count={12} /><RatingChip value={3.6} count={5} /><RatingChip count={0} /><VegMark veg /><VegMark veg={false} /></div>
+      </Section>
+
+      <Section title="Cards">
+        <div className="grid-cards">
+          <RestaurantCard r={{ id: 1, name: "Napoli Slice", cuisine: "Italian", image_url: IMG, is_open: true, rating_avg: 4.4, rating_count: 12 }} />
+          <RestaurantCard r={{ id: 2, name: "Closed Kitchen", cuisine: "Italian", image_url: IMG, is_open: false, rating_avg: 3.8, rating_count: 3 }} />
+          <RestaurantCard r={{ id: 3, name: "No Photo Yet", cuisine: null, image_url: null, is_open: true, rating_avg: 0, rating_count: 0 }} />
+          <RestaurantCardSkeleton />
+        </div>
+        <Card className="card--pad">
+          <DishCard dish={DISH} canOrder qty={0} onAdd={() => toast.info("ADD pressed")} onQty={() => {}} />
+          <DishCard dish={{ ...DISH, id: 2 }} canOrder qty={qty} onQty={setQty} />
+          <DishCard dish={{ ...DISH, id: 3, is_veg: false, name: "Pepperoni Pizza", is_available: false }} canOrder qty={0} />
+          <DishSkeleton />
+        </Card>
+        <div className="grid-stats"><StatCard label="Orders today" value="12" delta="+3 vs yesterday" /><StatCard label="Revenue" value="₹8,420.00" /></div>
+      </Section>
+
+      <Section title="Order stepper">
+        <Card className="card--pad"><OrderStepper order={{ status: "PREPARING", status_history: HISTORY }} /></Card>
+        <Card className="card--pad"><OrderStepper order={{ status: "DELIVERED", status_history: [] }} /></Card>
+      </Section>
+
+      <Section title="Controls">
+        <div className="row"><QtyStepper value={qty} name="demo" onChange={setQty} /><QtyStepper outline value={qty} name="demo" onChange={setQty} /><Switch checked={on} onChange={setOn} label="Demo switch" /><Spinner /></div>
+        <StarInput value={stars} onChange={setStars} /><Stars value={3} />
+        <Tabs label="Demo" value={tab} onChange={setTab} items={[{ value: "a", label: "Active", count: 2 }, { value: "b", label: "Past", count: 14 }]} />
+        <FilterBar value={filters} onChange={setFilters} statuses={ALL_STATUSES} />
+        <Pagination page={2} pages={8} onChange={() => {}} />
+      </Section>
+
+      <Section title="Feedback">
+        <Alert type="error">Error alert</Alert><Alert type="warning">Warning alert</Alert><Alert type="info">Info alert</Alert><Alert type="success">Success alert</Alert>
+        <div className="row"><Button onClick={() => toast.success("Saved")}>Success toast</Button><Button onClick={() => toast.error("Something failed")}>Error toast</Button><Button onClick={() => toast.info("Heads up")}>Info toast</Button></div>
+        <div className="row"><Button onClick={() => setModal("modal")}>Modal / bottom sheet</Button><Button onClick={() => setModal("drawer")}>Drawer</Button><Button onClick={() => setModal("confirm")}>Confirm</Button></div>
+        <Card><EmptyState icon="receipt" title="No orders yet" action={<Button variant="primary">Browse restaurants</Button>}>Orders you place show up here.</EmptyState></Card>
+        <Card><ErrorState message="Can't reach the server." onRetry={() => {}} /></Card>
+        <ListSkeleton count={1} />
+      </Section>
+
+      <Modal open={modal === "modal" || modal === "drawer"} variant={modal === "drawer" ? "drawer" : "sheet"} title="Write a review" onClose={() => setModal(null)}
+        footer={<><Button variant="ghost" onClick={() => setModal(null)}>Cancel</Button><Button variant="primary">Submit</Button></>}>
+        <StarInput value={stars} onChange={setStars} />
+        <Field label="Comment"><textarea className="textarea" /></Field>
+      </Modal>
+      <ConfirmDialog open={modal === "confirm"} title="Mark as delivered?" confirmLabel="Yes, delivered" onClose={() => setModal(null)} onConfirm={() => setModal(null)}>
+        <p>This can't be undone.</p>
+      </ConfirmDialog>
+      <Card><CardHead title="Card head" /><div className="card__body">Card body</div></Card>
+    </div>
+  );
+}

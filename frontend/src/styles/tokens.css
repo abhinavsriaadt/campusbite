@@ -1,0 +1,104 @@
+/*
+ * CampusBite design tokens — the single source for colour, type, spacing, shape and motion.
+ * Values in the first block are exactly those in DESIGN.md §2. Components must use these
+ * variables; never hard-code colours, spacing or font sizes.
+ */
+:root {
+  /* Brand */
+  --brand-500: #E8492F;   /* "Chili" — accents, active indicator, focus */
+  --brand-600: #C93A22;   /* primary fill (white text ≥ 4.5:1), hover for accents */
+  --brand-50:  #FDEEEA;   /* tinted backgrounds, selected chips */
+
+  /* Neutrals (warm) */
+  --ink-900: #1B1B1F;
+  --ink-700: #3A3A42;
+  --ink-500: #6B6B76;
+  --ink-300: #B9B8BF;
+  --line:    #E7E5E0;
+  --bg:      #F7F6F3;
+  --surface: #FFFFFF;
+
+  /* Semantic */
+  --success: #1E9E5A;  --success-50: #E6F5EC;
+  --warning: #D98E04;  --warning-50: #FDF3DC;
+  --danger:  #D92D3A;  --danger-50:  #FCE8EA;
+  --info:    #2F6FEB;  --info-50:    #E8EFFD;
+  --veg:     #1E9E5A;  --nonveg:     #B3261E;
+
+  /* Type — Plus Jakarta Sans (400/500/600/700) */
+  --font: "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, sans-serif;
+  --fs-xs: 12px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 18px;
+  --fs-xl: 22px; --fs-2xl: 28px; --fs-3xl: 36px;
+  --lh-tight: 1.2; --lh-body: 1.5;
+
+  /* Spacing (4px grid) */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+  --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px;
+
+  /* Shape & depth */
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-pill: 999px;
+  --shadow-1: 0 1px 2px rgba(27,27,31,.06), 0 1px 3px rgba(27,27,31,.08);
+  --shadow-2: 0 4px 12px rgba(27,27,31,.08);
+  --shadow-3: 0 12px 32px rgba(27,27,31,.14);
+
+  /* Motion */
+  --ease: cubic-bezier(.2,.8,.2,1);
+  --t-fast: 120ms; --t-base: 200ms; --t-slow: 320ms;
+
+  /* ---- Extensions (not in DESIGN.md §2; needed to meet DESIGN.md §7 contrast ≥ 4.5:1) ----
+   * The semantic colours above fail 4.5:1 as text on their own -50 tints (e.g. warning 2.4:1),
+   * so chip/alert text uses these darker "ink" shades of the same hues. */
+  --brand-700: #A62C17;   /* primary hover/pressed */
+  --brand-ink: #A62C17;   --success-ink: #146C3E;  --warning-ink: #845600;
+  --danger-ink: #A8202B;  --info-ink: #1D4FB8;
+  --neutral-50: #EFEDE8;  --neutral-ink: #5A5A64;  /* grey chips (Cancelled / Refunded) */
+  --on-brand: #FFFFFF;
+
+  /* ---- Layout & control sizes ---- */
+  --content-max: 1200px;
+  --gutter: var(--s-4);            /* 16px mobile, 24px desktop (see media query) */
+  --control-h: 44px;               /* buttons/inputs on mobile; 40px on desktop */
+  --tap-partner: 48px;             /* delivery-partner tap targets */
+  --nav-h: 64px;
+  --tabbar-h: 64px;
+  --sidebar-w: 232px;
+  --dish-img: 96px;
+  --focus-ring: 0 0 0 3px var(--brand-50);
+  --focus-outline: 2px solid var(--brand-500);
+  --overlay: rgba(27,27,31,.48);
+  --img-scrim: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%);
+  --scrim-banner: linear-gradient(180deg, rgba(0,0,0,.1) 0%, rgba(0,0,0,.7) 100%);
+  --scrim-auth: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.65));
+  --skeleton-hi: rgba(255,255,255,.6);
+  --z-nav: 40; --z-bar: 45; --z-modal: 60; --z-toast: 70;
+
+  color-scheme: light;
+}
+
+@media (min-width: 768px) {
+  :root { --gutter: var(--s-5); --control-h: 40px; }
+}
+
+/* Dark mode: same token names, dark values (keeps the existing automatic dark mode). */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --brand-50: #3A1D17;
+    --ink-900: #F2F1EE; --ink-700: #D6D5D9; --ink-500: #A2A1AB; --ink-300: #6A6973;
+    --line: #2E2D33; --bg: #141416; --surface: #1D1D21;
+    --success-50: #13291D; --warning-50: #2E2410; --danger-50: #34171B; --info-50: #172338;
+    --veg: #3FBF78; --nonveg: #E5574F;
+    --brand-ink: #FF8A73; --success-ink: #5FD08F; --warning-ink: #F2B84B;
+    --danger-ink: #FF7A84; --info-ink: #7DB0FF;
+    --neutral-50: #2A2A2F; --neutral-ink: #B6B5BE;
+    --shadow-1: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.5);
+    --shadow-2: 0 4px 12px rgba(0,0,0,.45);
+    --shadow-3: 0 12px 32px rgba(0,0,0,.6);
+    --overlay: rgba(0,0,0,.6);
+    --skeleton-hi: rgba(255,255,255,.06);
+    color-scheme: dark;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t-base: 0ms; --t-slow: 0ms; }
+}
