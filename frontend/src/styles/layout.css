@@ -30,6 +30,8 @@
 }
 /* Logged-in customers use the bottom tab bar's Cart on mobile. */
 @media (max-width: 767px) { .app--tabbar .topnav__cart { display: none; } }
+/* Small phones: the login page links to sign-up, so the guest bar keeps just "Log in". */
+@media (max-width: 419px) { .topnav__signup { display: none; } }
 
 /* ---------------------------------------------------------------- user menu */
 .usermenu { position: relative; }

@@ -169,7 +169,7 @@ export default function AppShell({ children }) {
             {user ? <UserMenu user={user} onLogout={onLogout} /> : (
               <>
                 <Button to="/login" variant="ghost" size="sm">Log in</Button>
-                <Button to="/register" variant="primary" size="sm">Sign up</Button>
+                <Button to="/register" variant="primary" size="sm" className="topnav__signup">Sign up</Button>
               </>
             )}
           </div>
