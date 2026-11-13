@@ -204,6 +204,18 @@ try {
   await page.waitForURL(`${BASE}/login`);
   await page.waitForSelector("text=Welcome back");
   ok("guest visiting /orders is redirected to /login");
+
+  // 8. Theme: toggle on the auth page, persisted as cb_theme, applied before React mounts ---
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  if ((await page.evaluate(() => [document.documentElement.dataset.theme, localStorage.getItem("cb_theme")])).join() !== "dark,dark") {
+    throw new Error("theme toggle did not apply/persist dark");
+  }
+  await page.addInitScript(() => document.addEventListener("readystatechange", () => {
+    window.__themeAtFirstState ??= document.documentElement.dataset.theme;
+  }, { once: true }));
+  await page.reload();
+  if (await page.evaluate(() => window.__themeAtFirstState) !== "dark") throw new Error("dark theme not set before first paint");
+  ok("theme toggle works before login, persists, and is applied before React mounts (no flash)");
   await ctx.close();
 } catch (err) {
   console.error(`\n✗ FAILED after ${passed} passing step(s): ${err.message}`);

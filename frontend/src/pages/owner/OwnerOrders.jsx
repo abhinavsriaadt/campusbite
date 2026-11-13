@@ -97,7 +97,7 @@ function KanbanCard({ order, onUpdated }) {
   return (
     <article className={`card kcard${stale ? " kcard--stale" : ""}`}>
       <div className="row-between">
-        <Link to={`/orders/${order.id}`} className="strong">#{order.id}</Link>
+        <Link to={`/orders/${order.id}`} className="strong kcard__id">#{order.id}</Link>
         <span className="text-xs muted">{timeAgo(order.created_at)}</span>
       </div>
       {stale && <span className="kcard__stale"><Icon name="clock" /> Waiting {waitLabel(waited)}</span>}

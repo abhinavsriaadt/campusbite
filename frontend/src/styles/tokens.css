@@ -70,6 +70,7 @@
   --content-max: 1200px;
   --gutter: var(--s-4);            /* 16px mobile, 24px desktop */
   --control-h: 44px;               /* 44px mobile, 40px desktop */
+  --control-sm: 44px;              /* compact controls (chips, small buttons): 44px touch, 36px desktop */
   --tap-partner: 48px;             /* delivery-partner tap targets */
   --nav-h: 64px;
   --tabbar-h: 64px;
@@ -92,7 +93,7 @@
 }
 
 @media (min-width: 768px) {
-  :root { --gutter: var(--s-5); --control-h: 40px; }
+  :root { --gutter: var(--s-5); --control-h: 40px; --control-sm: 36px; }
 }
 
 /* Dark mode — "night kitchen": warm charcoal, never #000; values from DESIGN.md §2. */

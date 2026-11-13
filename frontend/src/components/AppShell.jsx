@@ -133,7 +133,7 @@ export default function AppShell({ children }) {
   const onLogout = () => { logout(); navigate("/login"); };
 
   return (
-    <div className={`app${items.length ? " app--tabbar" : ""}${isOwner ? " app--sidebar" : ""}`}>
+    <div className={`app${items.length ? " app--tabbar" : ""}${isOwner ? " app--sidebar" : ""}${role === "delivery_partner" ? " app--partner" : ""}`}>
       <a href="#main" className="skip-link">Skip to content</a>
 
       {isOwner && (

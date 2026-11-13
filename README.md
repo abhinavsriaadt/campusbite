@@ -80,7 +80,7 @@ The React frontend talks to a FastAPI backend over REST. Data lives in PostgreSQ
 - **Middleware** logs the method, path, status and duration of every request, adds `X-Request-ID` and `X-Process-Time-Ms`, adds security headers, and catches unhandled errors.
 - **Timezone-aware business days**: all day boundaries (date filters, "orders today", the 7-day chart, "spent this week") follow `APP_TIMEZONE`, so an order at 00:30 IST counts as that day, not the previous UTC day.
 - **Background task**: an asyncio scheduler (started in the app lifespan) scans every 60 s for stale orders and writes `admin_reminder_logs`. It deduplicates, and reminders auto-resolve when the order moves on.
-- Responsive UI (checked at 375 px and 1280 px) with automatic dark mode, skeleton loaders, empty and error states with Retry, toasts, optimistic updates that roll back on failure, and confirmation for irreversible actions. Customers get a top nav on desktop and a bottom tab bar on phones; owners get a sidebar.
+- Responsive UI (checked at 375 px and 1280 px) with light and dark themes (a sun/moon toggle in the navbar and a Light / Dark / System choice in the avatar menu, remembered per browser and applied before first paint), skeleton loaders, empty and error states with Retry, toasts, optimistic updates that roll back on failure, and confirmation for irreversible actions. Customers get a top nav on desktop and a bottom tab bar on phones; owners get a sidebar.
 
 ### Order lifecycle
 
@@ -341,11 +341,13 @@ It covers this flow:
 4. Customer reviews, requests a refund, and uses Reorder (re-quoted by the server).
 5. Owner approves the refund through the confirm step. The order becomes Refunded with a refund ledger entry.
 
-It also checks role-based redirects, the mobile tab bar, dark mode with no horizontal overflow, the one-restaurant cart prompt, and fails on any browser console error.
+It also checks role-based redirects, the mobile tab bar, dark mode with no horizontal overflow, the one-restaurant cart prompt, and that the theme toggle works before login, persists and applies without a flash. It fails on any browser console error.
 
 ### Design system
 
-Frontend styling follows [DESIGN.md](DESIGN.md). All colours, spacing, type and motion come from `frontend/src/styles/tokens.css`, and reusable components live in `frontend/src/components/ui/`. In development, http://localhost:5173/styleguide renders every component and state. The route isn't included in production builds.
+Frontend styling follows [DESIGN.md](DESIGN.md). All colours, spacing, type and motion come from `frontend/src/styles/tokens.css`, and reusable components live in `frontend/src/components/ui/`. In development, http://localhost:5173/styleguide renders every component and state in either theme. The route isn't included in production builds.
+
+Accessibility: every text/background token pair is at least 4.5:1 in both themes, touch targets are at least 44 px (48 px on the delivery-partner screens), and every control has an accessible name. Where DESIGN.md had to bend to meet the capstone requirements or its own accessibility rules, the reason is listed in its "Deviations" table.
 
 ## Security notes
 

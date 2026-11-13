@@ -24,11 +24,11 @@
 .btn--danger { --btn-bg: var(--danger-fill); --btn-fg: var(--on-brand); --btn-border: var(--danger-fill); --btn-hover: var(--danger-fill-hover); }
 .btn--danger-outline { --btn-bg: var(--surface); --btn-fg: var(--danger-text); --btn-border: var(--danger-text); --btn-hover: var(--danger-50); }
 .btn--success { --btn-bg: var(--success-fill); --btn-fg: var(--on-brand); --btn-border: var(--success-fill); --btn-hover: var(--success-fill-hover); }
-.btn--sm { min-height: 36px; padding: 0 var(--s-3); font-size: var(--fs-xs); border-radius: var(--r-sm); }
+.btn--sm { min-height: var(--control-sm); padding: 0 var(--s-3); font-size: var(--fs-xs); border-radius: var(--r-sm); }
 .btn--lg { min-height: var(--tap-partner); padding: 0 var(--s-5); font-size: var(--fs-md); }
 .btn--block { width: 100%; }
 .btn--icon { padding: 0; width: var(--control-h); }
-.btn--sm.btn--icon { width: 36px; }
+.btn--sm.btn--icon { width: var(--control-sm); }
 .btn .spinner { width: 1em; height: 1em; border-width: 2px; }
 
 /* ================================================================ Spinner */
@@ -56,7 +56,7 @@
 .select { appearance: none; padding-right: var(--s-6);
   background-image: linear-gradient(45deg, transparent 50%, var(--ink-500) 50%), linear-gradient(135deg, var(--ink-500) 50%, transparent 50%);
   background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
-.input::placeholder, .textarea::placeholder { color: var(--ink-300); }
+.input::placeholder, .textarea::placeholder { color: var(--ink-500); }   /* ink-300 is 1.97:1 — unreadable */
 .input:hover, .select:hover, .textarea:hover { border-color: var(--ink-300); }
 .input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--brand-500); box-shadow: var(--focus-ring); }
 .input[aria-invalid="true"], .textarea[aria-invalid="true"] { border-color: var(--danger-text); }
@@ -91,7 +91,7 @@
 
 .chip {
   display: inline-flex; align-items: center; gap: var(--s-1);
-  min-height: 36px; padding: 0 var(--s-3); border-radius: var(--r-pill);
+  min-height: var(--control-sm); padding: 0 var(--s-3); border-radius: var(--r-pill);
   border: 1px solid var(--line); background: var(--surface); color: var(--ink-700);
   font-size: var(--fs-sm); font-weight: 600; white-space: nowrap;
   transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
@@ -164,17 +164,17 @@
 .dish--unavailable .dish__text, .dish--unavailable .food-img { opacity: .5; }
 .dish--unavailable .food-img img { filter: grayscale(1) brightness(var(--img-dim)); }
 .add-btn {
-  min-width: 80px; min-height: 36px; padding: 0 var(--s-3); border-radius: var(--r-sm);
+  min-width: 80px; min-height: var(--control-sm); padding: 0 var(--s-3); border-radius: var(--r-sm);
   background: var(--surface); color: var(--brand-text); border: 1px solid var(--line); box-shadow: var(--shadow-2);
   font-weight: 700; font-size: var(--fs-sm); letter-spacing: .02em;
   transition: transform var(--t-fast) var(--ease);
 }
 .add-btn:active { transform: scale(.96); }
 .stepper-qty {
-  display: inline-flex; align-items: center; min-height: 36px; border-radius: var(--r-sm);
+  display: inline-flex; align-items: center; min-height: var(--control-sm); border-radius: var(--r-sm);
   background: var(--brand-fill); color: var(--on-brand); box-shadow: var(--shadow-2); font-weight: 700; font-variant-numeric: tabular-nums;
 }
-.stepper-qty button { width: 32px; min-height: 36px; display: grid; place-items: center; color: inherit; border-radius: var(--r-sm); }
+.stepper-qty button { width: 32px; min-height: var(--control-sm); display: grid; place-items: center; color: inherit; border-radius: var(--r-sm); }
 .stepper-qty button:active { transform: scale(.9); }
 .stepper-qty span { min-width: 20px; text-align: center; font-size: var(--fs-sm); }
 .stepper-qty--outline { background: var(--surface); color: var(--brand-text); border: 1px solid var(--line); box-shadow: none; }
@@ -315,7 +315,7 @@
 
 /* ================================================================ Segmented tabs */
 .tabs { display: inline-flex; gap: var(--s-1); padding: var(--s-1); background: var(--neutral-50); border-radius: var(--r-md); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
-.tabs button { min-height: 36px; padding: 0 var(--s-4); border-radius: var(--r-sm); font-weight: 600; font-size: var(--fs-sm); color: var(--ink-500); white-space: nowrap; display: inline-flex; align-items: center; gap: var(--s-2); }
+.tabs button { min-height: var(--control-h); padding: 0 var(--s-4); border-radius: var(--r-sm); font-weight: 600; font-size: var(--fs-sm); color: var(--neutral-text); white-space: nowrap; display: inline-flex; align-items: center; gap: var(--s-2); }
 .tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink-900); box-shadow: var(--shadow-1); }
 .tabs .count { font-variant-numeric: tabular-nums; font-size: var(--fs-xs); padding: 0 var(--s-2); border-radius: var(--r-pill); background: var(--line); color: var(--ink-700); }
 .tabs button[aria-selected="true"] .count { background: var(--brand-50); color: var(--brand-text); }
@@ -347,7 +347,7 @@
 
 /* ---------------------------------------------------------------- theme choice (Light / Dark / System) */
 .theme-choice { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-1); padding: var(--s-1); border-radius: var(--r-md); background: var(--neutral-50); }
-.theme-choice button { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: var(--control-h); justify-content: center; border-radius: var(--r-sm); font-size: var(--fs-xs); font-weight: 600; color: var(--ink-500); }
+.theme-choice button { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: var(--control-h); justify-content: center; border-radius: var(--r-sm); font-size: var(--fs-xs); font-weight: 600; color: var(--neutral-text); }
 .theme-choice button .icon { width: 18px; height: 18px; }
 .theme-choice button:hover { color: var(--ink-900); }
 .theme-choice button[aria-checked="true"] { background: var(--surface); color: var(--brand-text); box-shadow: var(--shadow-1); }

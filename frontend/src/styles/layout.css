@@ -5,6 +5,9 @@
 /* ---------------------------------------------------------------- brand */
 .brand { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--ink-900); font-weight: 700; font-size: var(--fs-lg); letter-spacing: -0.01em; flex: none; }
 .brand:hover { text-decoration: none; }
+a.brand { min-height: var(--control-h); }
+/* Delivery partners: every control is a 48px tap target (DESIGN.md §4/§7). */
+.app--partner { --control-h: var(--tap-partner); --control-sm: var(--tap-partner); }
 .brand__mark { width: 32px; height: 32px; border-radius: var(--r-sm); display: grid; place-items: center; background: var(--brand-fill); color: var(--on-brand); font-size: var(--fs-md); }
 
 /* ---------------------------------------------------------------- top nav */
