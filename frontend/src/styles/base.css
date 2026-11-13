@@ -11,12 +11,14 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+  transition: var(--theme-transition);   /* theme switch; never `transition: all` */
 }
 img, svg, video { display: block; max-width: 100%; }
+img { filter: brightness(var(--img-dim)); }   /* photos sit slightly dimmer in dark mode */
 input, button, textarea, select { font: inherit; color: inherit; }
 button { cursor: pointer; background: none; border: 0; padding: 0; }
 button:disabled { cursor: not-allowed; }
-a { color: var(--brand-600); text-decoration: none; }
+a { color: var(--brand-text); text-decoration: none; }
 a:hover { text-decoration: underline; }
 ul, ol { padding: 0; list-style: none; }
 table { border-collapse: collapse; width: 100%; }

@@ -4,11 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="CampusBite — order from your favourite restaurants and track delivery in real time." />
-    <meta name="theme-color" content="#e8492f" />
+    <meta name="theme-color" content="#F7F6F3" />
+    <!-- Set the theme before first paint so a dark reload never flashes white (see ThemeContext). -->
+    <script>
+      (function () {
+        var t = "system";
+        try { t = localStorage.getItem("cb_theme") || "system"; } catch (e) {}
+        var dark = t === "dark" || (t !== "light" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        document.querySelector('meta[name="theme-color"]').setAttribute("content", dark ? "#121113" : "#F7F6F3");
+      })();
+    </script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%23e8492f'/><text x='16' y='23' font-family='Arial' font-weight='800' font-size='20' fill='white' text-anchor='middle'>C</text></svg>" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>CampusBite — Food delivery</title>
   </head>
   <body>

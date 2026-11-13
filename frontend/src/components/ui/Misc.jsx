@@ -96,13 +96,14 @@ export function Tabs({ items, value, onChange, label }) {
   );
 }
 
-/** Image with a reserved aspect ratio that fades in; falls back to a neutral line illustration. */
+/** Image with a reserved aspect ratio that fades in from a --bg placeholder; a missing or broken
+ * image shows a brand-50 block with a line icon (DESIGN.md §2 / §9). */
 export function FoodImage({ src, alt = "", square, className = "" }) {
   const [state, setState] = useState("loading");
   const showImg = src && state !== "error";
   return (
     <div className={`food-img${square ? " food-img--square" : ""} ${className}`}>
-      {!showImg || state === "loading" ? <span className="food-img__art" aria-hidden><Icon name="utensils" /></span> : null}
+      {!showImg ? <span className="food-img__art" aria-hidden><Icon name="utensils" /></span> : null}
       {showImg && (
         <img src={src} alt={alt} loading="lazy" decoding="async" className={state === "loaded" ? "is-loaded" : ""}
           onLoad={() => setState("loaded")} onError={() => setState("error")} />

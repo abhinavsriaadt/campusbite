@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ThemeToggle } from "../../components/ui";
 
 // Free Unsplash photo (hotlinked per Unsplash guidelines); checked by eye to be a food spread.
 const PHOTO = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1400&q=70";
@@ -18,6 +19,7 @@ export default function AuthLayout({ children }) {
         </div>
       </aside>
       <main id="main" className="auth__panel">
+        <ThemeToggle className="auth__theme" />
         <Link to="/" className="brand auth__brand" aria-label="CampusBite home"><span className="brand__mark" aria-hidden>C</span><span className="brand__name">CampusBite</span></Link>
         <div className="auth__card">{children}</div>
       </main>

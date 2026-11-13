@@ -12,3 +12,4 @@ export { DishCard, QtyStepper, RestaurantCard, StickyCartBar } from "./Food";
 export {
   Avatar, Card, CardHead, FoodImage, RatingChip, StarInput, Stars, StatCard, Switch, Tabs, VegMark, initialsOf,
 } from "./Misc";
+export { ThemeChoice, ThemeToggle } from "./Theme";

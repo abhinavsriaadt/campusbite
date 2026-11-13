@@ -3,7 +3,8 @@ import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { ROLE_LABEL } from "../utils/constants";
-import { Avatar, Button, Icon } from "./ui";
+import { useTheme } from "../context/ThemeContext";
+import { Avatar, Button, Icon, ThemeChoice, ThemeToggle } from "./ui";
 
 const NAV = {
   customer: [
@@ -73,6 +74,7 @@ function UserMenu({ user, onLogout }) {
             <span className="strong truncate">{user.name}</span>
             <span className="text-xs muted">{ROLE_LABEL[user.role]}</span>
           </div>
+          <div className="usermenu__theme"><span className="eyebrow">Theme</span><ThemeChoice /></div>
           <Link role="menuitem" to="/profile" className="usermenu__item"><Icon name="user" />Profile</Link>
           {user.role === "restaurant_owner" && (
             <Link role="menuitem" to="/owner/settings" className="usermenu__item"><Icon name="store" />Restaurant settings</Link>
@@ -110,6 +112,15 @@ function NavItems({ items, cart, variant }) {
   ));
 }
 
+function SidebarThemeToggle() {
+  const { resolved, toggle } = useTheme();
+  return (
+    <button type="button" className="icon-btn" onClick={toggle} aria-label={`Switch to ${resolved === "dark" ? "light" : "dark"} theme`}>
+      <Icon name={resolved === "dark" ? "sun" : "moon"} /><span>{resolved === "dark" ? "Light mode" : "Dark mode"}</span>
+    </button>
+  );
+}
+
 /** App chrome per role. Auth pages render without it. */
 export default function AppShell({ children }) {
   const { user, logout } = useAuth();
@@ -133,6 +144,7 @@ export default function AppShell({ children }) {
             <NavLink to="/owner/settings" className={({ isActive }) => `sidebar__link${isActive ? " is-active" : ""}`}>
               <span className="navicon"><Icon name="store" /></span><span>Restaurant</span>
             </NavLink>
+            <SidebarThemeToggle />
             <UserMenu user={user} onLogout={onLogout} />
           </div>
         </aside>
@@ -148,6 +160,7 @@ export default function AppShell({ children }) {
             </nav>
           )}
           <div className="topnav__right">
+            <ThemeToggle />
             {isCustomerish && (
               <Link to="/cart" className="topnav__cart" aria-label={`Cart, ${cart.count} item${cart.count === 1 ? "" : "s"}`}>
                 <span className="navicon"><Icon name="cart" /><CartBadge count={cart.count} bump={cart.bump} /></span>

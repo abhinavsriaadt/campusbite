@@ -41,12 +41,21 @@ The look and logo are our own. Don't copy any brand's logo, exact colors, or ill
   --bg:      #F7F6F3;     /* page background (warm off-white) */
   --surface: #FFFFFF;     /* cards, modals */
 
-  /* Semantic */
-  --success: #1E9E5A;  --success-50: #E6F5EC;
-  --warning: #D98E04;  --warning-50: #FDF3DC;
-  --danger:  #D92D3A;  --danger-50:  #FCE8EA;
-  --info:    #2F6FEB;  --info-50:    #E8EFFD;
+  --brand-text: #C93A22;  /* brand-colored text/links (passes contrast) */
+  --on-brand:   #FFFFFF;  /* text on brand fill */
+
+  /* Semantic: base (icons, borders) / -50 (chip bg) / -text (chip text) */
+  --success: #1E9E5A;  --success-50: #E6F5EC;  --success-text: #14693C;
+  --warning: #D98E04;  --warning-50: #FDF3DC;  --warning-text: #8A5A00;
+  --danger:  #D92D3A;  --danger-50:  #FCE8EA;  --danger-text:  #A11F2A;
+  --info:    #2F6FEB;  --info-50:    #E8EFFD;  --info-text:    #1F4FB0;
+  --neutral-50: #EDECE9; --neutral-text: #3A3A42;
   --veg:     #1E9E5A;  --nonveg:     #B3261E;
+
+  /* Elevation extras (used mainly by dark mode) */
+  --surface-2: #FFFFFF;   /* modals, sheets, dropdowns */
+  --overlay: rgba(27,27,31,.45);
+  --img-dim: 1;           /* image brightness multiplier */
 
   /* Type — Google Font "Plus Jakarta Sans" (400/500/600/700) */
   --font: "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, sans-serif;
@@ -70,6 +79,78 @@ The look and logo are our own. Don't copy any brand's logo, exact colors, or ill
 }
 ```
 
+### Dark mode — add to the same `tokens.css`
+
+Goal: a warm, deep "night kitchen" look. It shouldn't be pure black or a simple color inversion. Food photos glow against charcoal, and the chili red reads like a lit sign.
+
+```css
+[data-theme="dark"] {
+  color-scheme: dark;                 /* native scrollbars, inputs, date pickers */
+
+  /* Brand — fill stays rich; text variant is lifted for contrast */
+  --brand-500: #EE5235;  --brand-600: #FF6A4D;  --brand-50: #3A1D17;
+  --brand-text: #FF8A6E;  --on-brand: #FFFFFF;
+
+  /* Warm charcoal neutrals (never #000) */
+  --bg:        #121113;   /* page */
+  --surface:   #1B1A1D;   /* cards */
+  --surface-2: #242327;   /* modals, sheets, dropdowns, hovered cards */
+  --line:      #2F2D32;
+  --ink-900:   #F5F3EF;   /* headings (warm off-white, not #FFF) */
+  --ink-700:   #D9D6D0;   /* body */
+  --ink-500:   #A3A0A8;   /* secondary */
+  --ink-300:   #6C6A72;   /* placeholders, disabled */
+
+  /* Semantic: desaturated-bright text on deep tinted chips */
+  --success: #3CC47C;  --success-50: #12301F;  --success-text: #6FE0A3;
+  --warning: #F0B23A;  --warning-50: #33270D;  --warning-text: #FFCF6E;
+  --danger:  #FF5C66;  --danger-50:  #3A1518;  --danger-text:  #FF8F96;
+  --info:    #5B8EF5;  --info-50:    #16233F;  --info-text:    #93B6FF;
+  --neutral-50: #2A292D; --neutral-text: #C9C6C0;
+  --veg: #3CC47C;  --nonveg: #FF5C66;
+
+  /* Depth in dark = lighter surface + hairline, not big shadows */
+  --shadow-1: 0 0 0 1px var(--line);
+  --shadow-2: 0 0 0 1px var(--line), 0 6px 16px rgba(0,0,0,.45);
+  --shadow-3: 0 0 0 1px var(--line), 0 16px 40px rgba(0,0,0,.6);
+  --overlay: rgba(0,0,0,.6);
+  --img-dim: .9;
+}
+```
+
+**How it works**
+- A `ThemeContext` stores `"light" | "dark" | "system"` in localStorage under `cb_theme`.
+  - It sets `document.documentElement.dataset.theme` and resolves `"system"` with `matchMedia('(prefers-color-scheme: dark)')`.
+  - In `"system"` mode it also listens for changes, so the app follows the OS live.
+- An inline script in `index.html` sets the theme **before React mounts**, so the page never flashes white on load.
+- The toggle is a sun/moon icon button in the navbar, with a 3-way Light / Dark / System choice in the avatar menu.
+- Set `<meta name="theme-color">` to the current `--bg` on toggle, so the mobile browser bar matches.
+- Add `transition: background-color var(--t-base), color var(--t-base), border-color var(--t-base)` on `body` and cards only. Never use `transition: all`, which makes the whole page lag.
+
+**Make dark mode look great, not just inverted**
+- **Elevation:** the page uses `--bg`, cards use `--surface`, and modals, sheets, dropdowns and hovered cards use `--surface-2`. The higher an element sits, the lighter it is. Shadows in dark mode are mostly a 1px hairline.
+- **Images:** `img { filter: brightness(var(--img-dim)); }`. On hover, the RestaurantCard image returns to brightness 1 and scales to 1.03, which makes the food "light up". The bottom gradient on images fades into `rgba(18,17,19,.85)`.
+- **Brand color:** filled buttons use `--brand-500` with `--on-brand` text. Brand-colored *text* (links, prices on the cart bar, active nav labels) uses `--brand-text`, never `--brand-500`, which is too dim on charcoal.
+- **Status chips:** the background is `--{role}-50` and the text is `--{role}-text`, in both themes. This is the single rule that makes chips readable everywhere.
+- **Kanban board:** columns use `--bg` with a `--line` border, and cards use `--surface`. A stale order (older than 15 minutes) gets a 3px `--warning` left border plus a faint `--warning-50` background.
+- **StickyCartBar:** in dark mode, add `box-shadow: 0 -8px 24px rgba(0,0,0,.5)` so it lifts off the content.
+- **Inputs:** background `--surface-2`, border `--line`. On focus, the border becomes `--brand-500` with a `0 0 0 3px var(--brand-50)` ring.
+- **Skeleton shimmer:** a gradient from `--surface` to `--surface-2` to `--surface`, never grey on black.
+- **Veg/non-veg marks:** use the brighter `--veg`/`--nonveg` values with a 1.5px border, so they don't disappear.
+- **Empty-state and illustration icons:** use `--ink-500`, never pure white.
+- **Charts and stat bars (owner stats):** use `--brand-500`, `--info`, `--success` and `--warning` on `--surface`, with `--line` gridlines.
+- **Placeholder for missing images:** a `--brand-50` block with a `--brand-text` cuisine icon.
+
+**Dark-mode QA (run on every page)**
+- [ ] `grep -rnE "#[0-9a-fA-F]{3,6}|rgb\(" src --include=*.jsx --include=*.css` finds no colors outside `tokens.css`.
+- [ ] Body text has at least 4.5:1 contrast, and chips, secondary text and placeholders are readable.
+- [ ] No pure `#000` backgrounds and no pure `#FFF` text.
+- [ ] Modals, dropdowns and bottom sheets are visibly lighter than the page behind them.
+- [ ] Focus rings are visible on dark backgrounds.
+- [ ] Native date pickers and selects render dark (because of `color-scheme`).
+- [ ] Reloading in dark mode doesn't flash white.
+- [ ] The toggle works on the auth pages too, before login.
+
 **Rules:**
 - Prices and numbers use `font-variant-numeric: tabular-nums` and the ₹ prefix.
 - Headings are 700 weight with letter-spacing -0.01em. Body text is 400 or 500.
@@ -87,8 +168,8 @@ The look and logo are our own. Don't copy any brand's logo, exact colors, or ill
 | ASSIGNED | brand | Rider assigned |
 | OUT_FOR_DELIVERY | brand | On the way |
 | DELIVERED | success | Delivered |
-| CANCELLED | ink-500 (grey) | Cancelled |
-| REFUNDED | ink-500 (grey) | Refunded |
+| CANCELLED | neutral | Cancelled |
+| REFUNDED | neutral | Refunded |
 
 Payment chips are `mock_paid` → "Paid" (success) and `refunded` → "Refunded" (grey). Return chips are requested → warning, approved → success, rejected → danger.
 
@@ -98,8 +179,8 @@ Payment chips are `mock_paid` → "Paid" (success) and `refunded` → "Refunded"
 
 - **Button:** primary (brand fill), secondary (white, line border), ghost, and danger. Height is 44px on mobile and 40px on desktop. Each has loading (inline spinner, disabled) and disabled states. Only one primary button per view.
 - **Input / Select / Textarea:** label above the field, 12px radius, brand-colored focus ring `0 0 0 3px var(--brand-50)`, error text below in danger.
-- **Chip / StatusBadge:** pill shape, 12px semibold text, tinted background with the strong text color from the semantic pair.
-- **Card:** surface background, `--r-lg` radius, `--shadow-1` shadow, raised to `--shadow-2` with `translateY(-2px)` on hover (desktop only).
+- **Chip / StatusBadge:** pill shape, 12px semibold text, background `--{role}-50`, text `--{role}-text`. Brand chips use `--brand-50` with `--brand-text`, and grey chips use `--neutral-50` with `--neutral-text`.
+- **Card:** surface background, `--r-lg` radius, `--shadow-1` shadow. On hover (desktop only) it rises to `--shadow-2` with `translateY(-2px)`, and in dark mode the background also shifts to `--surface-2`.
 - **RestaurantCard:**
   - Image at 16:10 with a bottom gradient.
   - Name in 600 weight, then a cuisine line in ink-500.
@@ -115,7 +196,7 @@ Payment chips are `mock_paid` → "Paid" (success) and `refunded` → "Refunded"
 - **Skeleton:** shimmer blocks shaped like the card they replace. Use them for every list load.
 - **EmptyState:** a simple line icon, one sentence, and one action, e.g. "No orders yet. Browse restaurants →".
 - **Toast:** bottom-center on mobile, top-right on desktop. Auto-dismisses after 3 seconds. Success, error, and info variants.
-- **Modal / BottomSheet:** a centered modal on desktop and a bottom sheet on mobile (<640px). Used for writing a review (5 tappable stars), giving a return reason, and assigning a rider.
+- **Modal / BottomSheet:** uses `--surface-2` over a `--overlay` backdrop. It's a centered modal on desktop and a bottom sheet on mobile (<640px). Used for writing a review (5 tappable stars), giving a return reason, and assigning a rider.
 - **FilterBar:** horizontally scrollable chips (status), a date-range picker, and a "Clear" ghost button. Active filters show as brand-50 chips.
 - **Pagination:** "Load more" on mobile, numbered pages on desktop.
 - **StatCard:** label in ink-500, a big number in 2xl, and an optional delta.
@@ -196,7 +277,7 @@ Payment chips are `mock_paid` → "Paid" (success) and `refunded` → "Refunded"
 ---
 
 ## 7. Usability & accessibility checklist
-- [ ] Text contrast ≥ 4.5:1. Chip text always uses the strong color, never the -50 tint.
+- [ ] Text contrast ≥ 4.5:1 **in both themes**. Chip text always uses `--{role}-text`, never the base color or the -50 tint.
 - [ ] Visible focus ring on every interactive element. The whole app works with the keyboard.
 - [ ] Tap targets ≥ 44px, or 48px for the partner screens.
 - [ ] Every list has loading (skeleton), empty, and error (with Retry) states.
@@ -209,9 +290,29 @@ Payment chips are `mock_paid` → "Paid" (success) and `refunded` → "Refunded"
 
 ## 8. Prompt to give Claude Code
 
-> Read DESIGN.md. First create `src/styles/tokens.css`, a global reset, and the components in section 3 under `src/components/ui/`, plus a `/styleguide` dev route that renders every component and state. Then restyle pages in this order: auth → customer home → menu + StickyCartBar → cart/checkout → My orders (Active/Past grouping) → owner dashboard → owner Kanban order board → menu management → returns → partner screens → AI insights. Use only tokens, no hard-coded values. After each page, check it at 375px and 1280px and fix any overflow. Don't change API calls or business logic.
+> Read DESIGN.md. First create `src/styles/tokens.css`, a global reset, and the components in section 3 under `src/components/ui/`, plus a `/styleguide` dev route that renders every component and state. Then restyle pages in this order: auth → customer home → menu + StickyCartBar → cart/checkout → My orders (Active/Past grouping) → owner dashboard → owner Kanban order board → menu management → returns → partner screens → AI insights. Use only tokens, no hard-coded values. Implement dark mode (section 2) together with the tokens, not at the end, and build the theme toggle in the first step. After each page, check it at 375px and 1280px **in both light and dark**, and fix any overflow or contrast issues. Finish by running the dark-mode QA list. Don't change API calls or business logic. Build the email OTP login (section 10) as a separate step, only after the core features work.
 
-Images: for seed data, use free Unsplash image URLs for food and restaurants, stored in `image_url` columns.
+## 9. Content-agnostic layouts (more restaurants later)
+- Never hard-code restaurant names, cuisines, or categories in the UI. Derive cuisine chips from `GET /restaurants` data, and build menu category sections from the items' `category` values.
+- Cards must handle long names (2-line clamp), missing images (show a brand-50 placeholder with a cuisine icon), and 0 reviews ("New" chip instead of a rating).
+- Lists always paginate, and search runs on the server, so 9 restaurants or 500 use the same layout.
+
+Images: seed data uses the `image_url` values in `backend/seed_data.json`.
+
+## 10. Email OTP login (extra login method, keeps password login)
+- **UI:** the login card has two tabs, **Password** | **Email OTP**.
+  - Step 1: an email field and a "Send code" button.
+  - Step 2: a 6-box code input with auto-advance, paste support for the full code, `inputMode="numeric"` and `autocomplete="one-time-code"`.
+  - Below the boxes: a "Resend in 0:59" countdown, a "Check your spam folder" hint, and a "Change email" link.
+  - In both themes the boxes use the input styles, and the filled boxes get a `--brand-500` border.
+- **API:** `POST /auth/otp/request {email}` always returns 200 with the same message, so it doesn't reveal which emails are registered. `POST /auth/otp/verify {email, code}` returns the same response as `/auth/login`.
+- **Backend rules:**
+  - Generate the code with `secrets.randbelow(10**6)` as 6 digits, and store only its SHA-256 hash in `otp_codes`.
+  - Codes expire after 5 minutes, allow at most 5 attempts, and can be used only once.
+  - Allow one resend per 60 seconds per email.
+  - Send the email in a FastAPI `BackgroundTasks` task.
+- **Delivery:** with `OTP_DELIVERY=console` the code is printed to the Docker logs (for demos and evaluators). With `OTP_DELIVERY=email`, it's sent through Gmail SMTP with an App Password (`SMTP_HOST`, `SMTP_PORT=587`, `SMTP_USER`, `SMTP_PASSWORD`).
+- **Email template:** simple HTML with the CampusBite wordmark, the code in large monospace text, "Expires in 5 minutes", and a plain-text fallback.
 
 ---
 
@@ -219,10 +320,12 @@ Images: for seed data, use free Unsplash image URLs for food and restaurants, st
 
 | Design item | Why it differs | What is shown instead |
 |---|---|---|
-| Delivery fee "₹0 Free on campus" | Totals are computed server-side (`DELIVERY_FEE`); showing ₹0 would misstate the bill | The server's real fee; it reads "Free" only when the fee is 0 |
+| Delivery fee "₹0 Free on campus" | Totals are computed server-side (`DELIVERY_FEE`); showing ₹0 would misstate the bill | The server's real fee; it reads "Free on campus" only when the fee is 0 |
 | "₹ for two" on restaurant cards | No such data exists | The real rating count |
 | ETA on the live order card | No ETA data exists | "Updated N min ago" from the real status timestamp |
 | My Orders = Active/Past tabs only | Brief requires filtering by status **and date** | Tabs plus the status/date FilterBar |
 | Partner screens without filters | Brief requires filtering deliveries by status | Status FilterBar kept |
-| Light-only tokens | Existing automatic dark mode is preserved | Same token names, dark values under `prefers-color-scheme: dark` |
-| Chip text uses the semantic colour; primary buttons are brand-500 | §7 requires text contrast ≥ 4.5:1, but these pairs measure 2.4–4.1:1 (e.g. white on brand-500 = 3.87, warning on warning-50 = 2.43) | §2 values are unchanged. Text uses added `--*-ink` shades (all ≥ 5.7:1) and primary buttons fill with `--brand-600` (5.11:1); brand-500 stays for indicators and accents |
+| Filled buttons use `--brand-500` | §7 requires ≥ 4.5:1, but white on `--brand-500` is 3.87:1 (light) and 3.56:1 (dark) | All §2 values are unchanged. Fills use an added `--brand-fill` (#C93A22, 5.11:1) in both themes, plus `--success-fill` / `--danger-fill` for solid success/danger buttons, because the dark `-text` shades are too light to carry white text. `--brand-500` stays for indicators, focus, borders and charts |
+| Skeleton shimmer `--surface → --surface-2 → --surface` (dark) | A skeleton inside a card would have the same colour as the card, so it would be invisible | Skeleton blocks are `--surface-2` with a `--line` shimmer in dark mode |
+| Seed images from `backend/seed_data.json` | Seed data lives in `backend/app/seed.py` | `RESTAURANT_IMAGES` / `DISH_IMAGES` in `seed.py`: Unsplash photos, each checked by eye |
+| §10 Email OTP login | §8 says to build it as a separate step after the core features, and it changes auth | Not built yet; password login only |
