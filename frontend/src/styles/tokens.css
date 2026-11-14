@@ -75,8 +75,6 @@
   --control-h: 44px;               /* 44px mobile, 40px desktop */
   --control-sm: 44px;              /* compact controls (chips, small buttons): 44px touch, 36px desktop */
   --tap-partner: 48px;             /* delivery-partner tap targets */
-  --otp-box: 48px;                 /* email-code digit boxes (height; width shrinks to fit 375px) */
-  --otp-box-max: 56px;
   --nav-h: 64px;
   --tabbar-h: 64px;
   --sidebar-w: 232px;

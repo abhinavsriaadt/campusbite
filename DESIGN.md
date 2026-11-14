@@ -303,7 +303,7 @@ Payment chips are `mock_paid` → "Paid" (success) and `refunded` → "Refunded"
 
 ## 8. Prompt to give Claude Code
 
-> Read DESIGN.md. First create `src/styles/tokens.css`, a global reset, and the components in section 3 under `src/components/ui/`, plus a `/styleguide` dev route that renders every component and state. Then restyle pages in this order: auth → customer home → menu + StickyCartBar → cart/checkout → My orders (Active/Past grouping) → owner dashboard → owner Kanban order board → menu management → returns → partner screens → AI insights. Use only tokens, no hard-coded values. Implement dark mode (section 2) together with the tokens, not at the end, and build the theme toggle in the first step. After each page, check it at 375px and 1280px **in both light and dark**, and fix any overflow or contrast issues. Finish by running the dark-mode QA list. Don't change API calls or business logic. Build the email OTP login (section 10) as a separate step, only after the core features work.
+> Read DESIGN.md. First create `src/styles/tokens.css`, a global reset, and the components in section 3 under `src/components/ui/`, plus a `/styleguide` dev route that renders every component and state. Then restyle pages in this order: auth → customer home → menu + StickyCartBar → cart/checkout → My orders (Active/Past grouping) → owner dashboard → owner Kanban order board → menu management → returns → partner screens → AI insights. Use only tokens, no hard-coded values. Implement dark mode (section 2) together with the tokens, not at the end, and build the theme toggle in the first step. After each page, check it at 375px and 1280px **in both light and dark**, and fix any overflow or contrast issues. Finish by running the dark-mode QA list. Don't change API calls or business logic.
 
 ## 9. Content-agnostic layouts (more restaurants later)
 - Never hard-code restaurant names, cuisines, or categories in the UI. Derive cuisine chips from `GET /restaurants` data, and build menu category sections from the items' `category` values.
@@ -311,23 +311,6 @@ Payment chips are `mock_paid` → "Paid" (success) and `refunded` → "Refunded"
 - Lists always paginate, and search runs on the server, so 9 restaurants or 500 use the same layout.
 
 Images: seed data uses the `image_url` values in `backend/seed_data.json`.
-
-## 10. Email OTP login (extra login method, keeps password login)
-- **UI:** the login card has two tabs, **Password** | **Email OTP**.
-  - Step 1: an email field and a "Send code" button.
-  - Step 2: a 6-box code input with auto-advance, paste support for the full code, `inputMode="numeric"` and `autocomplete="one-time-code"`.
-  - Below the boxes: a "Resend in 0:59" countdown, a "Check your spam folder" hint, and a "Change email" link.
-  - In both themes the boxes use the input styles, and the filled boxes get a `--brand-500` border.
-- **API:** `POST /auth/otp/request {email}` always returns 200 with the same message, so it doesn't reveal which emails are registered. `POST /auth/otp/verify {email, code}` returns the same response as `/auth/login`.
-- **Backend rules:**
-  - Generate the code with `secrets.randbelow(10**6)` as 6 digits, and store only its SHA-256 hash in `otp_codes`.
-  - Codes expire after 5 minutes, allow at most 5 attempts, and can be used only once.
-  - Allow one resend per 60 seconds per email.
-  - Send the email in a FastAPI `BackgroundTasks` task.
-- **Delivery:** with `OTP_DELIVERY=console` the code is printed to the Docker logs (for demos and evaluators). With `OTP_DELIVERY=email`, it's sent through Gmail SMTP with an App Password (`SMTP_HOST`, `SMTP_PORT=587`, `SMTP_USER`, `SMTP_PASSWORD`).
-- **Email template:** simple HTML with the CampusBite wordmark, the code in large monospace text, "Expires in 5 minutes", and a plain-text fallback.
-
----
 
 ## Deviations from the design brief (capstone requirements take precedence)
 
@@ -343,5 +326,3 @@ Images: seed data uses the `image_url` values in `backend/seed_data.json`.
 | Menu price-range chips | Fixed price bands would be hard-coded prices in the UI | Min/max inputs whose hints show the menu's real price range from the API |
 | Placeholders use `--ink-300` | `--ink-300` on an input is 1.97:1 (light), which fails §2's QA check that placeholders are readable | Placeholders use `--ink-500` (≥ 4.5:1); `--ink-300` stays for disabled states and decorative marks |
 | Chips / small buttons 36px | §7 requires tap targets ≥ 44px | Added `--control-sm`: 44px on touch-sized screens, 36px from 768px up; delivery-partner screens use 48px for every control |
-| §10 Email OTP as a separate passwordless tab (`/auth/otp/request`, `/auth/otp/verify`) | The later auth brief makes the code a **second step after the bcrypt password** (sign-up verification and every login), keeping password auth | One shared `/verify` page after Register/Login. The endpoints are `/auth/verify-email`, `/auth/login/verify` and `/auth/otp/resend`. The §10 UI rules are unchanged: 6 boxes, paste/autofill, countdown, spam hint, Change email, filled boxes on `--brand-500`. |
-| §10 "one resend per 60 s" | Logging in again right after a successful login would otherwise leave the user with no usable code for up to a minute | The cooldown applies while the newest code is unused. Once it has been used, the next login sends a new code immediately (still behind the password and the 10-per-10-minutes rate limit). |

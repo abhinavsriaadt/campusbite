@@ -20,7 +20,3 @@ export default function Field({ label, hint, error, children, className = "" }) 
     </div>
   );
 }
-
-export const Input = (props) => <input className="input" {...props} />;
-export const Select = ({ children, ...props }) => <select className="select" {...props}>{children}</select>;
-export const Textarea = (props) => <textarea className="textarea" {...props} />;

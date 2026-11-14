@@ -36,13 +36,12 @@ export default function Login() {
     setError(null);
     setBusy(true);
     try {
-      const raw = location.state?.from;
-      const res = await login(form.email.trim(), form.password, { redirect: raw });
-      if (res.status === "ok") navigate(postLoginTarget(res.user.role, raw), { replace: true });
-      else navigate("/verify"); // otp_required (login code) or verification_required (signup code)
+      const u = await login(form.email.trim(), form.password);
+      navigate(postLoginTarget(u.role, location.state?.from), { replace: true });
     } catch (err) {
       const status = err.response?.status;
-      if (status === 429) setError("Too many attempts. Try again in a few minutes.");
+      if (status === 401) setError("Invalid email or password.");
+      else if (status === 429) setError("Too many login attempts. Try again in a few minutes.");
       else setError(errorMessage(err, "Login failed"));
     } finally {
       setBusy(false);
@@ -67,7 +66,6 @@ export default function Login() {
       {SHOW_DEMO && (
         <div className="demo">
           <p className="text-sm strong">Demo accounts · password <code>{DEMO_PASSWORD}</code></p>
-          <p className="text-xs muted">Next you'll be asked for a 6-digit code. Demo inboxes don't exist, so in console mode the code is printed in the backend logs.</p>
           {DEMO.map(([label, email]) => (
             <button key={email} type="button" className="demo__row" onClick={() => setForm({ email, password: DEMO_PASSWORD })}>
               <span className="muted">{label}</span><span className="demo__email">{email}</span>

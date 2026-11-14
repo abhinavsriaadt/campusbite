@@ -37,8 +37,6 @@ def get_current_user(
     user = db.get(User, user_id)
     if user is None or not user.is_active:
         raise _CREDENTIALS_ERROR
-    if not user.is_verified:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Email not verified")
     return user
 
 

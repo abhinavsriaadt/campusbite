@@ -49,16 +49,6 @@ def test_category_filter_uses_join_table(client, tagged):
     assert r["cost_for_two"] == 400 and r["avg_rating"] == 0 and r["review_count"] == 0
 
 
-def test_unverified_owner_restaurants_not_counted(client, tagged):
-    client.post("/api/auth/register", json={"name": "New Owner", "email": "new@test.com", "password": "Passw0rd!",
-                                             "role": "restaurant_owner", "restaurant": {"name": "Pending Rolls"}})
-    with SessionLocal() as s:
-        r = s.query(Restaurant).filter_by(name="Pending Rolls").one()
-        r.categories = [s.query(Category).filter_by(slug="rolls").one()]
-        s.commit()
-    assert {c["slug"]: c["restaurant_count"] for c in client.get("/api/categories").json()}["rolls"] == 2
-
-
 def test_menu_tag_filter_and_tags_in_output(client, tagged):
     r = client.get(f"/api/restaurants/{tagged.rest_id}/menu", params={"tag": "mughlai"}).json()
     assert r["total"] == 1 and r["sections"][0]["items"][0]["tags"] == ["mughlai"]
@@ -87,9 +77,9 @@ def test_seed_and_reset(client):
     assert len(names(category="sweets")) == 8
     assert {c["slug"]: c["restaurant_count"] for c in client.get("/api/categories").json()}["cafe"] == 10
 
-    # demo logins: verified, password from the data file, OTP still applies
+    # demo logins use the password from the data file
     r = client.post("/api/auth/login", json={"email": "aarav@campusbite.dev", "password": "Password@123"})
-    assert r.status_code == 200 and r.json()["status"] == "otp_required"
+    assert r.status_code == 200 and r.json()["user"]["role"] == "customer" and r.json()["access_token"]
 
     owner_before = client.post("/api/auth/login", json={"email": "owner.starbucks@campusbite.dev", "password": "Password@123"})
     assert owner_before.status_code == 200

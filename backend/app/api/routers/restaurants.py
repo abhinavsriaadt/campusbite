@@ -8,7 +8,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.api.deps import DbSession, PageParams
-from app.models import Category, MenuItem, Restaurant, Review, User, restaurant_categories
+from app.models import Category, MenuItem, Restaurant, Review, restaurant_categories
 from app.schemas import (
     CategoryOut, DishSearchOut, MenuItemOut, MenuOut, MenuSection, Page, RestaurantDetailOut, RestaurantOut, ReviewOut,
 )
@@ -17,14 +17,9 @@ from app.services.pagination import page_response, paginate
 router = APIRouter(tags=["Restaurants & Menus"])
 
 
-# A restaurant is public only once its owner has verified their email (sign-up creates it
-# before verification).
-VISIBLE = Restaurant.owner.has(User.is_verified.is_(True))
-
-
-def _visible_restaurant(db, restaurant_id: int) -> Restaurant:
+def _get_restaurant(db, restaurant_id: int) -> Restaurant:
     r = db.get(Restaurant, restaurant_id)
-    if r is None or not r.owner.is_verified:
+    if r is None:
         raise HTTPException(status_code=404, detail="Restaurant not found")
     return r
 
@@ -71,11 +66,11 @@ _WITH_CATEGORIES = (selectinload(Restaurant.categories), joinedload(Restaurant.p
 
 @router.get("/categories", response_model=list[CategoryOut], tags=["Categories"])
 def list_categories(db: DbSession):
-    """Browse categories with how many (public) restaurants are in each."""
+    """Browse categories with how many restaurants are in each."""
     count = (
         select(func.count(restaurant_categories.c.restaurant_id))
         .select_from(restaurant_categories.join(Restaurant, Restaurant.id == restaurant_categories.c.restaurant_id))
-        .where(restaurant_categories.c.category_id == Category.id, VISIBLE)
+        .where(restaurant_categories.c.category_id == Category.id)
         .scalar_subquery()
     )
     rows = db.execute(select(Category, count).order_by(Category.id)).all()
@@ -98,7 +93,7 @@ def list_restaurants(
 ):
     page_size = size or pg.page_size
     term = q or search
-    stmt = select(Restaurant).where(VISIBLE).options(*_WITH_CATEGORIES)
+    stmt = select(Restaurant).options(*_WITH_CATEGORIES)
     if term:
         stmt = stmt.where(
             or_(Restaurant.name.ilike(_like(term), escape="\\"), Restaurant.cuisine.ilike(_like(term), escape="\\"))
@@ -122,7 +117,7 @@ def list_restaurants(
 
 @router.get("/restaurants/cuisines", response_model=list[str])
 def list_cuisines(db: DbSession):
-    return [c for c in db.scalars(select(Restaurant.cuisine).where(Restaurant.cuisine.is_not(None), VISIBLE).distinct().order_by(Restaurant.cuisine))]
+    return [c for c in db.scalars(select(Restaurant.cuisine).where(Restaurant.cuisine.is_not(None)).distinct().order_by(Restaurant.cuisine))]
 
 
 def _sections(db, restaurant_id: int) -> list[str]:
@@ -139,7 +134,7 @@ def _sections(db, restaurant_id: int) -> list[str]:
 
 @router.get("/restaurants/{restaurant_id}", response_model=RestaurantDetailOut)
 def get_restaurant(restaurant_id: int, db: DbSession):
-    r = _visible_restaurant(db, restaurant_id)
+    r = _get_restaurant(db, restaurant_id)
     return RestaurantDetailOut.model_validate({**RestaurantOut.model_validate(r).model_dump(), "sections": _sections(db, r.id)})
 
 
@@ -158,7 +153,7 @@ def restaurant_menu(
     sort: MenuSort = "menu",
 ):
     """The menu grouped by section. Sections keep menu order; dishes inside follow `sort`."""
-    _visible_restaurant(db, restaurant_id)
+    _get_restaurant(db, restaurant_id)
     if min_price is not None and max_price is not None and min_price > max_price:
         raise HTTPException(status_code=422, detail="min_price cannot be greater than max_price")
     lo, hi = db.execute(
@@ -193,7 +188,7 @@ def search_dishes(
     stmt = (
         select(MenuItem)
         .join(Restaurant, Restaurant.id == MenuItem.restaurant_id)
-        .where(Restaurant.is_open.is_(True), VISIBLE)
+        .where(Restaurant.is_open.is_(True))
         .options(joinedload(MenuItem.restaurant))
     )
     stmt = _menu_sort(_menu_filters(stmt, q, min_price, max_price, None, veg_only, True), sort)
@@ -207,7 +202,7 @@ def search_dishes(
 
 @router.get("/restaurants/{restaurant_id}/reviews", response_model=Page[ReviewOut])
 def restaurant_reviews(restaurant_id: int, db: DbSession, pg: PageParams):
-    _visible_restaurant(db, restaurant_id)
+    _get_restaurant(db, restaurant_id)
     stmt = (
         select(Review)
         .where(Review.restaurant_id == restaurant_id)

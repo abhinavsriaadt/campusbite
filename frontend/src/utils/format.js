@@ -27,27 +27,19 @@ export function timeAgo(iso) {
   return dateOnly(iso);
 }
 
-export const initials = (name = "") =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0].toUpperCase())
-    .join("") || "?";
-
 /** plural(1, "item") → "1 item"; plural(2, "delivery", "deliveries") → "2 deliveries" */
 export const plural = (n, word, many = `${word}s`) => `${n} ${n === 1 ? word : many}`;
 
 export const minutesSince = (iso) => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
 
 /** Local calendar-day key (YYYY-MM-DD in the viewer's timezone). */
-export function dayKey(iso) {
+function dayKey(iso) {
   const d = new Date(iso);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 /** "Today", "Yesterday" or "12 Nov" (with the year when it isn't this year). */
-export function dayHeading(iso) {
+function dayHeading(iso) {
   const key = dayKey(iso);
   const now = new Date();
   if (key === dayKey(now)) return "Today";

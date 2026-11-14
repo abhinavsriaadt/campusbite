@@ -2,7 +2,7 @@
  * Single source of truth for how order / payment / return states look and read (DESIGN.md §2).
  * `tone` maps to a Badge variant: info | warning | brand | success | danger | grey.
  */
-export const LIFECYCLE = ["PLACED", "ACCEPTED", "PREPARING", "READY", "ASSIGNED", "OUT_FOR_DELIVERY", "DELIVERED"];
+const LIFECYCLE = ["PLACED", "ACCEPTED", "PREPARING", "READY", "ASSIGNED", "OUT_FOR_DELIVERY", "DELIVERED"];
 export const ALL_STATUSES = [...LIFECYCLE, "CANCELLED", "REFUNDED"];
 export const ACTIVE_STATUSES = ["PLACED", "ACCEPTED", "PREPARING", "READY", "ASSIGNED", "OUT_FOR_DELIVERY"];
 

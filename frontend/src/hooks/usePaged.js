@@ -14,7 +14,7 @@ export function useMediaQuery(query) {
   return matches;
 }
 
-export const useIsMobile = () => useMediaQuery("(max-width: 639px)");
+const useIsMobile = () => useMediaQuery("(max-width: 639px)");
 
 /**
  * Server-paginated list. `fetchPage(page)` must resolve to the API's `{items, total, page, pages}`.
@@ -43,7 +43,6 @@ export function usePaged(fetchPage, deps = []) {
         }));
       })
       .catch((err) => id === runId.current && setState((s) => ({ ...s, loading: false, error: errorMessage(err) })));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effective.key, effective.page, effective.append, effective.nonce]);
 
   const goTo = useCallback((page) => {

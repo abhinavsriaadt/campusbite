@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { errorMessage } from "../../api/client";
 import { Alert, Button, Field, Icon } from "../../components/ui";
 import { useAuth } from "../../context/AuthContext";
@@ -38,9 +38,7 @@ function validate(f) {
 export default function Register() {
   const { register, user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  // "Change email" on /verify comes back here with the earlier answers (never the passwords).
-  const [f, setF] = useState(() => ({ ...BLANK, ...(location.state?.draft || {}), password: "", confirm: "" }));
+  const [f, setF] = useState(BLANK);
   const [errors, setErrors] = useState({});
   const [error, setError] = useState(null);
   const [exists, setExists] = useState(false);
@@ -68,14 +66,12 @@ export default function Register() {
           address: f.restaurantAddress.trim() || null, description: f.description.trim() || null, phone: f.phone.trim() || null,
         };
       }
-      const { password: _p, confirm: _c, ...draft } = f;
-      await register(payload, draft);
-      navigate("/verify");
+      const u = await register(payload);
+      navigate(ROLE_HOME[u.role], { replace: true });
     } catch (err) {
       const status = err.response?.status;
       setExists(status === 409);
       if (status === 409) setError("An account with this email already exists.");
-      else if (status === 429) setError(errorMessage(err, "Please wait a minute before requesting another code."));
       else setError(errorMessage(err, "Registration failed"));
     } finally {
       setBusy(false);

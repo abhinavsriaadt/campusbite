@@ -17,7 +17,6 @@ from sqlalchemy import (
     Table,
     Text,
     UniqueConstraint,
-    false,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -59,8 +58,6 @@ class User(TimestampMixin, Base):
     phone: Mapped[str | None] = mapped_column(String(20))
     address: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    # Set once the signup email OTP is verified; unverified users cannot use any protected API.
-    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false(), nullable=False)
 
     restaurant: Mapped["Restaurant | None"] = relationship(back_populates="owner", uselist=False)
     orders: Mapped[list["Order"]] = relationship(
@@ -69,24 +66,6 @@ class User(TimestampMixin, Base):
     deliveries: Mapped[list["Order"]] = relationship(
         back_populates="delivery_partner", foreign_keys="Order.delivery_partner_id"
     )
-
-
-class OtpCode(TimestampMixin, Base):
-    """One-time email code. Only a keyed SHA-256 hash of the code is stored."""
-
-    __tablename__ = "otp_codes"
-    __table_args__ = (
-        CheckConstraint("purpose IN ('signup', 'login')", name="purpose_valid"),
-        Index("ix_otp_codes_user_purpose_created", "user_id", "purpose", "created_at"),
-    )
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    purpose: Mapped[str] = mapped_column(String(16), nullable=False)
-    code_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(UTCDateTime, nullable=False)
-    attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
-    consumed_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
 
 
 class Category(Base):
@@ -317,7 +296,6 @@ class AdminReminderLog(TimestampMixin, Base):
 
 
 __all__ = [
-    "OtpCode",
     "Category",
     "restaurant_categories",
     "Base",

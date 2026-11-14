@@ -32,12 +32,12 @@ class SlidingWindowRateLimiter:
             self._hits.clear()
 
 
-def _auth_window() -> float:
+def _login_window() -> float:
     from app.core.config import get_settings
 
-    return float(get_settings().AUTH_RATE_WINDOW_SECONDS)
+    return float(get_settings().LOGIN_RATE_WINDOW_SECONDS)
 
 
 ai_rate_limiter = SlidingWindowRateLimiter()
-# /auth/login, /auth/verify-email, /auth/login/verify, /auth/otp/resend (default 10 per 10 min).
-auth_rate_limiter = SlidingWindowRateLimiter(_auth_window())
+# /auth/login, per client IP + email (default 10 attempts per 10 minutes).
+login_rate_limiter = SlidingWindowRateLimiter(_login_window())

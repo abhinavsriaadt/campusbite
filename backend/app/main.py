@@ -10,7 +10,6 @@ from sqlalchemy import text
 from app.api.routers import ai, auth, delivery, orders, owner, restaurants, returns
 from app.core.config import get_settings
 from app.core.database import engine
-from app.core.errors import ApiError, api_error_handler
 from app.core.middleware import RequestContextMiddleware, SecurityHeadersMiddleware
 from app.services.reminder_service import reminder_loop
 
@@ -29,15 +28,7 @@ async def lifespan(app: FastAPI):
     task = None
     if settings.ENABLE_REMINDER_SCHEDULER:
         task = asyncio.create_task(reminder_loop(stop))
-    if settings.OTP_DELIVERY == "email" and not settings.smtp_configured:
-        logger.warning(
-            "OTP_DELIVERY=email but SMTP_HOST/SMTP_USER/SMTP_PASSWORD are not all set — "
-            "falling back to console delivery (codes are printed in these logs)."
-        )
-    logger.info(
-        "CampusBite API started (env=%s, ai_enabled=%s, otp_delivery=%s, otp_on_login=%s)",
-        settings.ENVIRONMENT, bool(settings.OPENAI_API_KEY), settings.otp_delivery_mode, settings.OTP_ON_LOGIN,
-    )
+    logger.info("CampusBite API started (env=%s, ai_enabled=%s)", settings.ENVIRONMENT, bool(settings.OPENAI_API_KEY))
     yield
     stop.set()
     if task:
@@ -49,10 +40,9 @@ app = FastAPI(
     version="1.0.0",
     description=(
         "REST API for **CampusBite** — restaurant ordering & delivery.\n\n"
-        "Authenticate with `POST /api/auth/login` (then `POST /api/auth/login/verify` with the emailed code), click **Authorize** and paste the `access_token`."
+        "Authenticate with `POST /api/auth/login`, then click **Authorize** and paste the `access_token`."
     ),
     lifespan=lifespan,
-    exception_handlers={ApiError: api_error_handler},
     docs_url="/docs",
     redoc_url="/redoc",
 )

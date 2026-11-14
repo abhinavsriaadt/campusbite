@@ -1,6 +1,0 @@
-Hi $name,
-$intro
-$code
-$outro
-$extra_text
-— Team CampusBite

@@ -29,7 +29,6 @@ from app.models import (
     Order,
     OrderItem,
     OrderStatusHistory,
-    OtpCode,
     PaymentLedger,
     Restaurant,
     ReturnRequest,
@@ -101,12 +100,9 @@ def _get_or_create_user(db: Session, *, name, email, phone, role, password_hash,
     email = email.strip().lower()
     user = db.scalar(select(User).where(User.email == email))
     if user is None:
-        user = User(name=name, email=email, phone=phone, role=role, address=address,
-                    password_hash=password_hash, is_verified=True)
+        user = User(name=name, email=email, phone=phone, role=role, address=address, password_hash=password_hash)
         db.add(user)
         db.flush()
-    else:
-        user.is_verified = True
     return user
 
 
@@ -116,7 +112,6 @@ def reset(db: Session) -> None:
     seeded_owners = select(User.id).where(User.role == UserRole.RESTAURANT_OWNER, User.email.like(f"%{DEMO_DOMAIN}"))
     for stmt in (
         delete(AdminReminderLog),
-        delete(OtpCode).where(OtpCode.user_id.in_(seeded_owners)),
         delete(Review),
         delete(ReturnRequest),
         delete(PaymentLedger),

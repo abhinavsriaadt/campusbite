@@ -75,7 +75,7 @@ export function Switch({ checked, onChange, disabled, label }) {
   );
 }
 
-export const initialsOf = (name = "") =>
+const initialsOf = (name = "") =>
   name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join("") || "?";
 
 export function Avatar({ name, large }) {

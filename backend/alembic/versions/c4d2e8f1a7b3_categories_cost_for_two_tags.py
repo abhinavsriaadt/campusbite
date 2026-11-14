@@ -1,7 +1,7 @@
 """categories (many-to-many), restaurants.cost_for_two/primary_category_id, menu_items.tags
 
 Revision ID: c4d2e8f1a7b3
-Revises: b7e1c3a9d2f4
+Revises: 4fdca2b9900c
 Create Date: 2026-11-15 10:00:00.000000
 
 """
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 
 revision: str = 'c4d2e8f1a7b3'
-down_revision: Union[str, None] = 'b7e1c3a9d2f4'
+down_revision: Union[str, None] = '4fdca2b9900c'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

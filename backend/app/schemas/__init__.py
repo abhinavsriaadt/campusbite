@@ -102,39 +102,6 @@ class LoginRequest(BaseModel):
     _e = field_validator("email", mode="before")(_norm_email)
 
 
-OtpPurpose = Literal["signup", "login"]
-
-
-class VerifyCodeRequest(BaseModel):
-    email: EmailStr
-    code: str = Field(pattern=r"^\d{6}$", description="The 6-digit code from the email")
-
-    _e = field_validator("email", mode="before")(_norm_email)
-    _c = field_validator("code", mode="before")(_strip)
-
-
-class ResendRequest(BaseModel):
-    email: EmailStr
-    purpose: OtpPurpose
-
-    _e = field_validator("email", mode="before")(_norm_email)
-
-
-class OtpChallenge(BaseModel):
-    """Returned instead of a token when an email code is still needed."""
-
-    status: Literal["verification_required", "otp_required"]
-    email: str = Field(description="Masked email the code was sent to, e.g. a***h@gmail.com")
-    purpose: OtpPurpose
-    resend_in: int = Field(description="Seconds until /auth/otp/resend will accept a request")
-    detail: str | None = None
-
-
-class ResendOut(BaseModel):
-    detail: str
-    resend_in: int
-
-
 class UserOut(ORMModel):
     id: int
     name: str
