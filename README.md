@@ -126,11 +126,12 @@ cd campusbite
 cp .env.example .env
 ```
 
-Edit `.env` and set at least:
+`.env.example` lists every variable with an empty value; blank values use the defaults in the [table below](#environment-variables). Edit `.env` and set:
 
 ```bash
 POSTGRES_PASSWORD=<any strong password>
 JWT_SECRET_KEY=<run: python3 -c "import secrets; print(secrets.token_urlsafe(48))">
+SEED_DEMO_DATA=true            # load the Lucknow demo data on first start
 OPENAI_API_KEY=<optional — enables AI insights>
 ```
 
@@ -146,7 +147,7 @@ On startup the backend container:
 
 1. Waits for Postgres to be healthy.
 2. Runs `alembic upgrade head`.
-3. Seeds the Lucknow demo data if `SEED_DEMO_DATA=true`. This is idempotent (see [Seed data](#seed-data)).
+3. Seeds the Lucknow demo data if `SEED_DEMO_DATA=true`. This is idempotent (see [Seed data](#seed-data)). If you left it off, run `docker compose exec backend python seed.py` once.
 4. Starts Uvicorn on **http://localhost:8000**.
 
 Swagger docs are at **http://localhost:8000/docs**.
@@ -155,8 +156,8 @@ Swagger docs are at **http://localhost:8000/docs**.
 
 ```bash
 cd frontend
-cp .env.example .env       # VITE_API_URL=http://localhost:8000/api
-npm install
+cp .env.example .env       # optional: blank values default to http://localhost:8000/api
+npm ci                     # exact versions from package-lock.json
 npm run dev                # → http://localhost:5173
 ```
 
@@ -222,33 +223,40 @@ Then:     Authorization: Bearer <access_token>   (GET /auth/me returns the curre
 
 ### Root `.env` (read by Docker Compose and the backend container)
 
+Every variable is listed in `.env.example` with an empty value. A blank value falls back to the default below.
+
 | Variable | Required | Default | Purpose |
 |---|---|---|---|
 | `POSTGRES_PASSWORD` | **yes** | — | Database password |
 | `POSTGRES_DB` / `POSTGRES_USER` | no | `campusbite` | Database name and user |
 | `BACKEND_PORT` | no | `8000` | Host port for the API |
+| `SEED_DEMO_DATA` | no | `false` | Load the demo data on start (idempotent) |
 | `JWT_SECRET_KEY` | **yes** | — | JWT signing key (32+ characters) |
+| `JWT_ALGORITHM` | no | `HS256` | JWT signing algorithm |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | no | `720` | Token lifetime |
+| `BCRYPT_ROUNDS` | no | `12` | bcrypt cost factor (4–16) |
 | `CORS_ORIGINS` | no | `http://localhost:5173,…` | Comma-separated allowed frontend origins |
-| `SEED_DEMO_DATA` | no | `true` (example) | Seed demo data on start |
+| `LOGIN_RATE_LIMIT` / `LOGIN_RATE_WINDOW_SECONDS` | no | `10` / `600` | Login attempts allowed per IP + email within the window |
+| `DELIVERY_FEE` / `TAX_RATE` | no | `40` / `0.05` | Added to every order by the server |
 | `OPENAI_API_KEY` | for AI | — | Enables AI insights. Without it, the endpoint returns `503` with a clear message. |
 | `OPENAI_MODEL` | no | `gpt-5.4-mini` | OpenAI chat model |
+| `OPENAI_TIMEOUT_SECONDS` / `OPENAI_MAX_OUTPUT_TOKENS` | no | `30` / `800` | OpenAI request limits |
 | `AI_RATE_LIMIT_PER_MINUTE` | no | `5` | AI questions per customer per minute |
+| `AI_CONTEXT_MAX_ORDERS` | no | `50` | Recent orders sent as context (totals always use the full history) |
 | `ENABLE_REMINDER_SCHEDULER` | no | `true` | Run the background reminder job |
 | `REMINDER_THRESHOLD_MINUTES` | no | `15` | When an order counts as stale |
 | `REMINDER_CHECK_INTERVAL_SECONDS` | no | `60` | Scheduler interval |
 | `APP_TIMEZONE` | no | `Asia/Kolkata` | Business timezone for "today", date filters, daily revenue chart and AI date questions (timestamps are stored in UTC) |
-| `LOG_LEVEL` | no | `INFO` | Logging level |
-| `LOGIN_RATE_LIMIT` / `LOGIN_RATE_WINDOW_SECONDS` | no | `10` / `600` | Login attempts allowed per IP + email within the window |
+| `APP_NAME` / `ENVIRONMENT` / `LOG_LEVEL` | no | `CampusBite API` / `development` / `INFO` | Docs title, environment label, logging level |
 
-`DATABASE_URL` is assembled by `docker-compose.yml` from the Postgres variables.
+`DATABASE_URL` is assembled by `docker-compose.yml` from the Postgres variables. `backend/.env.example` lists the same variables plus `DATABASE_URL` for running without Docker.
 
 ### `frontend/.env`
 
 | Variable | Default | Purpose |
 |---|---|---|
 | `VITE_API_URL` | `http://localhost:8000/api` | Backend base URL |
-| `VITE_SHOW_DEMO_ACCOUNTS` | `true` | Show the demo-login helper |
+| `VITE_SHOW_DEMO_ACCOUNTS` | shown | Show the demo-login helper (set `false` to hide) |
 
 ## Database setup
 
@@ -326,11 +334,13 @@ All routes are prefixed with `/api`. Lists return `{items, total, page, page_siz
 
 | Code | Meaning |
 |---|---|
+| `200` | OK |
 | `201` | Created |
-| `401` | Missing or invalid token |
+| `400` | Business rule violated: invalid status transition, cancelling after `PLACED` or a delivered order, assigning before `READY`, reviewing or returning before delivery |
+| `401` | Missing or invalid token, or wrong email/password |
 | `403` | Wrong role |
 | `404` | Not found, or not yours |
-| `409` | Business-rule conflict (invalid transition, duplicate review or return, unavailable dish) |
+| `409` | Conflict with existing data: duplicate email, second review or return, closed restaurant, unavailable dish, already-resolved return |
 | `422` | Validation error |
 | `429` | Rate limited |
 | `502` / `503` / `504` | AI upstream problems |
@@ -341,43 +351,40 @@ The backend builds the AI context only from orders where `customer_id` equals th
 
 ## Testing
 
+Four layers, all green on the last run (see [QA_REPORT.md](QA_REPORT.md) for the requirement-by-requirement matrix):
+
+| Layer | Command | Count |
+|---|---|---|
+| Backend unit/integration (pytest, SQLite, OpenAI mocked) | `cd backend && pytest -q` | 164 tests |
+| API smoke test against the running Docker stack | `python3 scripts/smoke_test.py` | 42 steps |
+| Browser end-to-end (Playwright, local Chrome) | `cd frontend && npx playwright test` | 19 tests |
+| Lint | `cd backend && ruff check .` · `cd frontend && npx eslint . && npx knip` | 0 problems |
+
+**Backend tests** (`backend/tests/`) use their own temporary SQLite database, so they never touch Docker data:
+
 ```bash
-cd backend && source .venv/bin/activate
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
 pytest -q
 ```
 
-52 tests cover:
+They cover: auth (register/login JWT, `409` duplicate email, identical `401`, `/auth/me`, `401` without or with a bad token, rate limit `429`); an **RBAC matrix** of every API endpoint × every role (`401` anonymous, `403` wrong role) plus `404` for other users' resources, built from the OpenAPI schema so a new route can't be missed; the **lifecycle** happy path by all three roles and **every invalid transition from every status** (`400`); cancel/assign/review/return rules; payments (`mock_paid` + ledger, refunds); filters and pagination shape; owner stats checked against the seeded orders; reminders (created once, not duplicated); AI (customer scoping — customer A's data never appears in B's prompt — the four example questions, a client-sent `customer_id` rejected, OpenAI errors mapped to `429`/`502`/`503`/`504`, rate limit); middleware (`X-Process-Time`, request logging); timezones; seed data; settings.
 
-- **Auth:** register and login return a JWT, duplicate email `409`, identical `401` for wrong email or password, email normalisation, password rules, bcrypt hashing, `/auth/me`, the login rate limit (`429`) and role guards (`403`).
-- **RBAC:** role guards and cross-tenant isolation for customers, owners and riders.
-- **Orders:** server-side pricing, the full lifecycle, every invalid transition, cancel rules and auto-refund, and the order-list item preview staying scoped to the right user.
-- **Reviews and returns:** review and return rules.
-- **Payments:** ledger entries.
-- **Owner features:** statistics accuracy, reminder generation, deduplication and auto-resolution.
-- **AI:** context isolation (a mocked OpenAI client verifies no foreign orders are sent), totals over the full history even when the detail rows are capped, app rate limiting, and mapping of OpenAI `429`.
-- **Catalogue and seed data:** category counts, the many-to-many category filter, menu grouping and `tag` filter, the data file's shape (45 / 9 / 1000, 20–25 dishes each), and `seed --reset` keeping self-registered users.
-- **Timezones:** orders just after and just before local midnight land on the correct local day in filters, dashboard counts and the chart.
-- **Middleware and health:** logging and timing headers; `/health` returns `503` when the database is down.
+**Smoke test** — with `docker compose up` running, registers fresh accounts for all three roles and drives register → menu → order → accept → prepare → ready → assign → out → deliver → review → return → approve, printing PASS/FAIL per step (exit code 1 on any failure):
 
-### End-to-end UI test
+```bash
+python3 scripts/smoke_test.py          # SMOKE_API_URL=http://host:8000/api to target another server
+```
 
-A Playwright script drives the real UI in Chrome across all three roles. Start the backend with demo data and run `npm run dev` first. Then:
+**Browser end-to-end** — with the backend (demo data seeded) and `npm run dev` running:
 
 ```bash
 cd frontend
-npm run e2e        # CHROME_PATH=/path/to/chrome and E2E_BASE_URL=... are optional
+npx playwright test        # or: npm run e2e. Uses the installed Google Chrome (CHROME_PATH=... to override)
 ```
 
-It covers this flow:
-
-1. Customer filters by the **Coffee** chip (URL `?category=coffee`), opens Starbucks with its coffee dishes highlighted, adds 2 dishes (sticky cart bar), searches the menu, sees the server quote and pays (mock), then gets a success screen and the tracking page.
-2. The Starbucks owner moves the order across the Kanban board (New → Accepted → Preparing → Ready) and assigns a rider.
-3. Rider, on a 390 px phone, sees the tap-to-call card, picks up, confirms delivery, and finds the order in history.
-4. Customer reviews, requests a refund, and uses Reorder (re-quoted by the server).
-5. Owner approves the refund through the confirm step. The order becomes Refunded with a refund ledger entry.
-6. A new customer signs up and lands on the home page signed in (the session survives a refresh), logs out, and sees the inline error for a wrong password.
-
-It also checks role-based redirects, the mobile tab bar, dark mode with no horizontal overflow, the one-restaurant cart prompt, and that the theme toggle works before login, persists and applies without a flash. It fails on any browser console error, except failed loads from the third-party demo-image host.
+The suite (`frontend/e2e/`) covers: a new customer registers, browses by category, searches by name, filters by price, adds/updates/removes cart items, checks out (pay button matches the server quote), sees the order and cancels a `PLACED` one; the owner moves an order to `READY` on the Kanban board and assigns a rider; the rider (390 px) delivers it; the customer reviews and requests a refund; the owner approves it (order `REFUNDED`, refund ledger entry). It also checks role redirects (a customer can't open `/owner`), the wrong-password error, sessions surviving a refresh, the dark-mode toggle (applied before first paint), the AI page, owner reminders, and **no horizontal scroll at 375, 768 and 1280 px in light and dark for every role's pages**. Any browser console error fails the test (failed loads from the third-party demo-image host are the only exception).
 
 ### Design system
 
@@ -400,11 +407,14 @@ Accessibility: every text/background token pair is at least 4.5:1 in both themes
 ```
 campusbite/
 ├── docker-compose.yml        # Postgres + backend
+├── SPEC.md                   # the capstone brief (source of truth)
+├── QA_REPORT.md              # requirement-by-requirement audit and test results
 ├── DESIGN.md                 # UI design brief and token rules
 ├── CLAUDE.md                 # Working notes for AI-assisted development
 ├── .env.example
+├── scripts/smoke_test.py     # end-to-end API smoke test against the running stack
 ├── backend/
-│   ├── Dockerfile · docker-entrypoint.sh · requirements*.txt · alembic.ini
+│   ├── Dockerfile · docker-entrypoint.sh · requirements*.txt · alembic.ini · ruff.toml
 │   ├── alembic/              # migrations
 │   ├── app/
 │   │   ├── main.py           # app factory, middleware, lifespan scheduler
@@ -418,10 +428,12 @@ campusbite/
 │   ├── seed_data_lucknow.json # demo restaurants, categories, menus, users
 │   └── tests/                # pytest suite
 └── frontend/
-    ├── index.html · vite.config.js · .env.example
+    ├── index.html · vite.config.js · .env.example · eslint.config.js · knip.json · playwright.config.js
+    ├── e2e/                  # Playwright tests (journey, app-wide checks)
+    ├── public/               # favicon, app icons, web manifest
     └── src/
         ├── api/              # axios client (JWT interceptor) + endpoint functions
-        ├── context/          # Auth, Cart, Toast providers
+        ├── context/          # Auth, Cart, Theme, Toast providers
         ├── hooks/            # useAsync, useDebounced, usePaged (pages / load more)
         ├── components/       # AppShell (nav), ProtectedRoute, OrderActions, OrderCard, RevenueChart
         │   └── ui/           # design-system components: Button, Field, Badge, Modal, DishCard, OrderStepper…
