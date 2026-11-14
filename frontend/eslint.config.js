@@ -28,6 +28,7 @@ export default [
   {
     files: ["e2e/**", "playwright.config.js", "vite.config.js", "eslint.config.js"],
     languageOptions: { globals: { ...globals.node } },
-    rules: { "no-console": "off" },
+    // Node scripts and Playwright tests: Playwright's fixture `use()` is not a React hook.
+    rules: { "no-console": "off", "react-hooks/rules-of-hooks": "off" },
   },
 ];
