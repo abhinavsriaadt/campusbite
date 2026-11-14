@@ -181,7 +181,7 @@ def test_ai_upstream_rate_limit_maps_to_429(world, monkeypatch, settings):
 def test_middleware_headers(client):
     r = client.get("/health")
     assert r.status_code == 200 and r.json()["database"] == "up"
-    assert "X-Process-Time-Ms" in r.headers and "X-Request-ID" in r.headers
+    assert "X-Process-Time" in r.headers and "X-Request-ID" in r.headers
 
 
 def test_database_rejects_duplicate_reminder(world):

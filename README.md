@@ -78,7 +78,7 @@ The React frontend talks to a FastAPI backend over REST. Data lives in PostgreSQ
 ### Platform
 - **Order state machine** with role-specific transitions. Invalid transitions return `409`; transitions by the wrong role return `403`. Status changes lock the order row.
 - **Payment ledger**: append-only `PAYMENT` and `REFUND` rows with unique transaction references.
-- **Middleware** logs the method, path, status and duration of every request, adds `X-Request-ID` and `X-Process-Time-Ms`, adds security headers, and catches unhandled errors.
+- **Middleware** logs the method, path, status and duration of every request, adds `X-Request-ID` and `X-Process-Time` (response time in milliseconds), adds security headers, and catches unhandled errors.
 - **Timezone-aware business days**: all day boundaries (date filters, "orders today", the 7-day chart, "spent this week") follow `APP_TIMEZONE`, so an order at 00:30 IST counts as that day, not the previous UTC day.
 - **Background task**: an asyncio scheduler (started in the app lifespan) scans every 60 s for stale orders and writes `admin_reminder_logs`. It deduplicates, and reminders auto-resolve when the order moves on.
 - Responsive UI (checked at 375 px and 1280 px) with light and dark themes (a sun/moon toggle in the navbar and a Light / Dark / System choice in the avatar menu, remembered per browser and applied before first paint), skeleton loaders, empty and error states with Retry, toasts, optimistic updates that roll back on failure, and confirmation for irreversible actions. Customers get a top nav on desktop and a bottom tab bar on phones; owners get a sidebar.

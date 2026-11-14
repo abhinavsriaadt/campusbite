@@ -1,6 +1,6 @@
 def test_review_only_after_delivery_once(world):
     oid = world.place()["id"]
-    assert world.cust.post(f"/api/orders/{oid}/review", {"rating": 5}).status_code == 409
+    assert world.cust.post(f"/api/orders/{oid}/review", {"rating": 5}).status_code == 400
     world.advance_to(oid, "DELIVERED")
     assert world.cust2.post(f"/api/orders/{oid}/review", {"rating": 1}).status_code == 404
     assert world.cust.post(f"/api/orders/{oid}/review", {"rating": 6}).status_code == 422
@@ -16,9 +16,10 @@ def test_review_only_after_delivery_once(world):
 
 def test_return_flow_approve(world):
     oid = world.place()["id"]
-    assert world.cust.post(f"/api/orders/{oid}/return", {"reason": "Food arrived cold and spilled"}).status_code == 409
+    assert world.cust.post(f"/api/orders/{oid}/return", {"reason": "Food arrived cold and spilled"}).status_code == 400
     world.advance_to(oid, "DELIVERED")
-    assert world.cust.post(f"/api/orders/{oid}/return", {"reason": "short"}).status_code == 422
+    for bad in ({}, {"reason": ""}, {"reason": "   "}, {"reason": "short"}):
+        assert world.cust.post(f"/api/orders/{oid}/return", bad).status_code == 422
     r = world.cust.post(f"/api/orders/{oid}/return", {"reason": "Food arrived cold and spilled"})
     assert r.status_code == 201 and r.json()["return_status"] == "pending"
     # no duplicates

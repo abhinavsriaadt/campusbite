@@ -500,6 +500,11 @@ class DeliveryStats(BaseModel):
 
 # --------------------------------------------------------------------------- AI
 class AIInsightRequest(BaseModel):
+    """Only the question is accepted. The customer is always the authenticated user, so any
+    extra field (e.g. customer_id) is rejected with 422 rather than silently ignored."""
+
+    model_config = ConfigDict(extra="forbid")
+
     question: str = Field(min_length=3, max_length=500)
 
     _s = field_validator("question", mode="before")(_strip)

@@ -23,11 +23,12 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             logger.exception("%s %s -> 500 (%.1fms) rid=%s", request.method, request.url.path, elapsed_ms, request_id)
             response = JSONResponse(status_code=500, content={"detail": "Internal server error", "request_id": request_id})
             response.headers["X-Request-ID"] = request_id
+            response.headers["X-Process-Time"] = f"{elapsed_ms:.1f}"
             return response
 
         elapsed_ms = (time.perf_counter() - start) * 1000
         response.headers["X-Request-ID"] = request_id
-        response.headers["X-Process-Time-Ms"] = f"{elapsed_ms:.1f}"
+        response.headers["X-Process-Time"] = f"{elapsed_ms:.1f}"  # milliseconds
         level = logging.WARNING if elapsed_ms > 1000 else logging.INFO
         logger.log(
             level, "%s %s -> %s (%.1fms) rid=%s",

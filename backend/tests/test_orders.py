@@ -50,7 +50,7 @@ def test_full_lifecycle(world):
 def test_invalid_transitions_rejected(world):
     oid = world.place()["id"]
     # skip a step
-    assert world.owner.patch(f"/api/orders/{oid}/status", {"status": "READY"}).status_code == 409
+    assert world.owner.patch(f"/api/orders/{oid}/status", {"status": "READY"}).status_code == 400
     # customer cannot accept
     assert world.cust.patch(f"/api/orders/{oid}/status", {"status": "ACCEPTED"}).status_code == 403
     # special statuses not settable via generic endpoint
@@ -60,10 +60,10 @@ def test_invalid_transitions_rejected(world):
     assert world.owner.patch(f"/api/orders/{oid}/status", {"status": "TELEPORTED"}).status_code == 422
     # assign before READY
     r = world.owner.post(f"/api/orders/{oid}/assign", {"delivery_partner_id": world.rider.user["id"]})
-    assert r.status_code == 409
+    assert r.status_code == 400
     world.advance_to(oid, "READY")
     # owner cannot mark out for delivery
-    assert world.owner.patch(f"/api/orders/{oid}/status", {"status": "OUT_FOR_DELIVERY"}).status_code in (403, 409)
+    assert world.owner.patch(f"/api/orders/{oid}/status", {"status": "OUT_FOR_DELIVERY"}).status_code == 400
     # cannot assign a customer as rider
     r = world.owner.post(f"/api/orders/{oid}/assign", {"delivery_partner_id": world.cust.user["id"]})
     assert r.status_code == 422
@@ -82,7 +82,7 @@ def test_delivery_partner_scope(world):
     assert o["payments"] == []
     assert world.rider.get(f"/api/orders/{oid}/payments").status_code == 403
     # rider can't jump straight to DELIVERED
-    assert world.rider.patch(f"/api/orders/{oid}/status", {"status": "DELIVERED"}).status_code == 409
+    assert world.rider.patch(f"/api/orders/{oid}/status", {"status": "DELIVERED"}).status_code == 400
 
 
 def test_reassign_before_pickup(world):
@@ -112,16 +112,16 @@ def test_cancel_rules_and_auto_refund(world):
     assert o["status"] == "CANCELLED" and o["payment_status"] == "refunded"
     assert [p["entry_type"] for p in o["payments"]] == ["PAYMENT", "REFUND"]
     # cannot cancel twice
-    assert world.cust.post(f"/api/orders/{oid}/cancel").status_code == 409
+    assert world.cust.post(f"/api/orders/{oid}/cancel").status_code == 400
 
     oid2 = world.place()["id"]
     world.advance_to(oid2, "ACCEPTED")
-    assert world.cust.post(f"/api/orders/{oid2}/cancel").status_code == 409
+    assert world.cust.post(f"/api/orders/{oid2}/cancel").status_code == 400
 
     oid3 = world.place()["id"]
     world.advance_to(oid3, "DELIVERED")
     r = world.cust.post(f"/api/orders/{oid3}/cancel")
-    assert r.status_code == 409 and "Delivered" in r.json()["detail"]
+    assert r.status_code == 400 and "Delivered" in r.json()["detail"]
 
 
 def test_owner_can_reject_placed_order(world):

@@ -122,7 +122,7 @@ def assign(order_id: int, data: AssignRequest, owner: OwnerUser, db: DbSession):
 def review_order(order_id: int, data: ReviewCreate, customer: CustomerUser, db: DbSession):
     order = svc.get_order_for_user(db, order_id, customer, lock=True)
     if order.status not in svc.REVIEWABLE_STATUSES:
-        raise HTTPException(status_code=409, detail="You can only review an order after it has been delivered")
+        raise HTTPException(status_code=400, detail="You can only review an order after it has been delivered")
     if order.review is not None:
         raise HTTPException(status_code=409, detail="You have already reviewed this order")
 
@@ -147,7 +147,7 @@ def request_return(order_id: int, data: ReturnCreate, customer: CustomerUser, db
     if order.return_request is not None:
         raise HTTPException(status_code=409, detail="A return/refund request already exists for this order")
     if order.status != svc.S.DELIVERED:
-        raise HTTPException(status_code=409, detail="Returns can only be requested after the order has been delivered")
+        raise HTTPException(status_code=400, detail="Returns can only be requested after the order has been delivered")
     db.add(ReturnRequest(order_id=order.id, customer_id=customer.id, restaurant_id=order.restaurant_id,
                          reason=data.reason))
     try:

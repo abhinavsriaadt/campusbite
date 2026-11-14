@@ -55,7 +55,7 @@ app.add_middleware(
     allow_credentials=False,
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
-    expose_headers=["X-Request-ID", "X-Process-Time-Ms", "Retry-After"],
+    expose_headers=["X-Request-ID", "X-Process-Time", "Retry-After"],
 )
 app.add_middleware(RequestContextMiddleware)
 

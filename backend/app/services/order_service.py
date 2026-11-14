@@ -67,7 +67,13 @@ def _not_found() -> HTTPException:
 
 
 def _conflict(detail: str) -> HTTPException:
+    """409: the request clashes with existing state (duplicate, closed restaurant, sold out)."""
     return HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
+
+
+def _bad_request(detail: str) -> HTTPException:
+    """400: a business rule forbids this action in the order's current status."""
+    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
 
 
 # --------------------------------------------------------------------------- queries & access
@@ -147,7 +153,7 @@ def parse_statuses(raw: str | None) -> list[OrderStatus] | None:
 def ensure_transition(order: Order, target: OrderStatus, user: User) -> None:
     allowed_roles = TRANSITIONS.get((order.status, target))
     if allowed_roles is None:
-        raise _conflict(f"Invalid status transition: {order.status.value} → {target.value}")
+        raise _bad_request(f"Invalid status transition: {order.status.value} → {target.value}")
     if user.role not in allowed_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -333,9 +339,9 @@ def place_order(db: Session, customer: User, data: OrderCreate) -> Order:
 
 def cancel_order(db: Session, order: Order, user: User, reason: str | None) -> Order:
     if order.status == S.DELIVERED:
-        raise _conflict("Delivered orders cannot be cancelled")
+        raise _bad_request("Delivered orders cannot be cancelled")
     if order.status != S.PLACED:
-        raise _conflict("Orders can only be cancelled while they are in PLACED status")
+        raise _bad_request("Orders can only be cancelled while they are in PLACED status")
     ensure_transition(order, S.CANCELLED, user)
     by = "customer" if user.role == R.CUSTOMER else "restaurant"
     order.cancel_reason = reason or f"Cancelled by {by}"
@@ -367,7 +373,7 @@ def assign_partner(db: Session, order: Order, owner: User, partner_id: int) -> O
         order.status_updated_at = utcnow()
     else:
         if order.status != S.READY:
-            raise _conflict("Delivery partners can only be assigned when the order is READY")
+            raise _bad_request("Delivery partners can only be assigned when the order is READY")
         ensure_transition(order, S.ASSIGNED, owner)
         order.delivery_partner_id = partner.id
         _set_status(db, order, S.ASSIGNED, owner, f"Assigned to {partner.name}")
