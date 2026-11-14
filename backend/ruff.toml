@@ -1,0 +1,24 @@
+# Lint settings for the backend: `ruff check .` (and `ruff check . --fix`).
+target-version = "py312"
+line-length = 120
+extend-exclude = [".venv"]
+
+[lint]
+# pyflakes (unused imports/variables, undefined names), pycodestyle, import order,
+# pyupgrade and bugbear.
+select = ["F", "E", "W", "I", "UP", "B"]
+ignore = [
+  "B008",   # FastAPI declares dependencies as default arguments (Depends/Query)
+  "E501",   # long strings (AI prompt, migrations) read better unwrapped
+  "UP042",  # str+Enum -> StrEnum changes str() output at runtime
+  "UP046",  # keep Generic[T] for the Pydantic Page model
+]
+
+[lint.per-file-ignores]
+# conftest must set env vars before importing the app.
+"tests/conftest.py" = ["E402"]
+# Alembic's generated revision files keep their upstream layout.
+"alembic/versions/*.py" = ["UP007", "UP035", "I001"]
+
+[lint.isort]
+known-first-party = ["app"]

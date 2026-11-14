@@ -182,25 +182,25 @@ def generate_insight(db: Session, customer: User, question: str) -> dict:
             max_completion_tokens=settings.OPENAI_MAX_OUTPUT_TOKENS,
             safety_identifier=f"campusbite-customer-{customer.id}",  # abuse-monitoring id, no PII
         )
-    except openai.RateLimitError:
+    except openai.RateLimitError as exc:
         logger.warning("OpenAI rate limit hit for user %s", customer.id)
         raise AIServiceError(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="The AI service is busy right now. Please try again in a minute.",
             headers={"Retry-After": "30"},
-        )
-    except openai.AuthenticationError:
+        ) from exc
+    except openai.AuthenticationError as exc:
         logger.error("OpenAI authentication failed — check OPENAI_API_KEY")
         raise AIServiceError(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                             detail="AI service credentials are invalid. Contact the administrator.")
-    except (openai.APITimeoutError, openai.APIConnectionError):
+                             detail="AI service credentials are invalid. Contact the administrator.") from exc
+    except (openai.APITimeoutError, openai.APIConnectionError) as exc:
         logger.warning("OpenAI connection/timeout error")
         raise AIServiceError(status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-                             detail="The AI service did not respond in time. Please try again.")
+                             detail="The AI service did not respond in time. Please try again.") from exc
     except openai.APIError as exc:
         logger.error("OpenAI API error: %s", exc)
         raise AIServiceError(status_code=status.HTTP_502_BAD_GATEWAY,
-                             detail="The AI service returned an error. Please try again later.")
+                             detail="The AI service returned an error. Please try again later.") from exc
 
     choice = completion.choices[0] if completion.choices else None
     answer = (choice.message.content or "").strip() if choice else ""

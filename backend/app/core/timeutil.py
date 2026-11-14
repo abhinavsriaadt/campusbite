@@ -5,7 +5,7 @@ restaurant's local calendar (APP_TIMEZONE, e.g. Asia/Kolkata). Otherwise an orde
 00:30 IST is filed under the previous day.
 """
 
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import UTC, date, datetime, time, timedelta
 from functools import lru_cache
 from zoneinfo import ZoneInfo
 
@@ -32,7 +32,7 @@ def local_today() -> date:
 
 def local_day_start(d: date) -> datetime:
     """UTC instant at which local calendar day `d` begins (DST-safe)."""
-    return datetime.combine(d, time.min, tzinfo=app_tz()).astimezone(timezone.utc)
+    return datetime.combine(d, time.min, tzinfo=app_tz()).astimezone(UTC)
 
 
 def local_day_end(d: date) -> datetime:

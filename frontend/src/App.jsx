@@ -27,7 +27,7 @@ const Styleguide = import.meta.env.DEV ? lazy(() => import("./pages/Styleguide")
 function NotFound() {
   return (
     <EmptyState media={<Logo variant="mark" height={56} className="empty__logo" />} title="Page not found" action={<Link to="/">Go home →</Link>}>
-      The page you're looking for doesn't exist.
+      The page you&apos;re looking for doesn&apos;t exist.
     </EmptyState>
   );
 }

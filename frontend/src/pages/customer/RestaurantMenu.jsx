@@ -47,7 +47,7 @@ export default function RestaurantMenu() {
         </div>
       </header>
       {r.description && <p className="muted menu-desc">{r.description}</p>}
-      {!r.is_open && <Alert type="warning" className="menu-alert">This restaurant isn't accepting orders right now. You can still browse the menu.</Alert>}
+      {!r.is_open && <Alert type="warning" className="menu-alert">This restaurant isn&apos;t accepting orders right now. You can still browse the menu.</Alert>}
 
       <Tabs label="Restaurant sections" value={tab} onChange={setTab}
         items={[{ value: "menu", label: "Menu" }, { value: "reviews", label: "Reviews", count: r.rating_count }]} />
@@ -151,7 +151,7 @@ function Menu({ restaurant, initialQuery, tag, onClearTag }) {
       )}
 
       <div className="card menu-list" ref={listRef}>
-        {invalid ? <Alert type="warning">Min price can't be higher than max price.</Alert>
+        {invalid ? <Alert type="warning">Min price can&apos;t be higher than max price.</Alert>
           : menu.error ? <ErrorState message={menu.error} onRetry={menu.reload} />
           : !menu.data ? <ListSkeleton count={4} Item={DishSkeleton} />
           : !sections.length ? <EmptyState icon="utensils" title="No dishes found">Try a different search or price range.</EmptyState>

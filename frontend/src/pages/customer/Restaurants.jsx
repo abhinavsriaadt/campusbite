@@ -71,7 +71,7 @@ function RestaurantList({ q }) {
     <>
       <div className="chips home__chips" role="group" aria-label="Filter by category" aria-busy={chips.loading || undefined}>
         {chips.error ? (
-          <button type="button" className="linkbtn" onClick={chips.reload}>Couldn't load categories. Retry</button>
+          <button type="button" className="linkbtn" onClick={chips.reload}>Couldn&apos;t load categories. Retry</button>
         ) : !chips.data ? (
           Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="skel-chip" />)
         ) : (

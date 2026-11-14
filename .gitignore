@@ -23,3 +23,9 @@ dist/
 
 # E2E artifacts
 frontend/e2e/screenshots/
+
+# Test / tool artifacts
+frontend/test-results/
+frontend/playwright-report/
+uploads/
+.ruff_cache/

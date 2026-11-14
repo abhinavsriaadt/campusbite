@@ -11,7 +11,7 @@
  * Screenshots are written to e2e/screenshots/ (git-ignored).
  */
 import { mkdirSync } from "node:fs";
-import { chromium } from "playwright-core";
+import { chromium } from "@playwright/test";
 
 const BASE = (process.env.E2E_BASE_URL || "http://localhost:5173").replace(/\/$/, "");
 const CHROME = process.env.CHROME_PATH || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";

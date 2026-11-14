@@ -5,7 +5,14 @@ from decimal import Decimal
 from typing import Annotated, Generic, Literal, TypeVar
 
 from pydantic import (
-    BaseModel, ConfigDict, EmailStr, Field, PlainSerializer, computed_field, field_validator, model_validator,
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    PlainSerializer,
+    computed_field,
+    field_validator,
+    model_validator,
 )
 
 from app.models.enums import (

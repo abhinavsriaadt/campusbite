@@ -45,11 +45,11 @@ export default function AiInsights() {
   return (
     <div className="narrow ai">
       <div className="page-head">
-        <div><h1 className="row-nowrap"><Icon name="sparkles" /> AI order insights</h1><p>Ask about your own order history: spending, favourites, what's on the way.</p></div>
+        <div><h1 className="row-nowrap"><Icon name="sparkles" /> AI order insights</h1><p>Ask about your own order history: spending, favourites, what&apos;s on the way.</p></div>
       </div>
       {status.error && <Alert>{status.error}</Alert>}
       {status.data && !enabled && (
-        <Alert type="warning">AI insights aren't set up on this server yet. An administrator needs to set <code>OPENAI_API_KEY</code> in the backend environment.</Alert>
+        <Alert type="warning">AI insights aren&apos;t set up on this server yet. An administrator needs to set <code>OPENAI_API_KEY</code> in the backend environment.</Alert>
       )}
 
       <div className="chips ai__chips" role="group" aria-label="Suggested questions">
@@ -60,7 +60,7 @@ export default function AiInsights() {
         {messages.length === 0 && (
           <div className="card card--pad ai__intro">
             <Icon name="sparkles" />
-            <p>I only look at <b>your</b> orders, never anyone else's. Pick a question above or type your own.</p>
+            <p>I only look at <b>your</b> orders, never anyone else&apos;s. Pick a question above or type your own.</p>
           </div>
         )}
         {messages.map((m, i) => m.role === "user" ? (

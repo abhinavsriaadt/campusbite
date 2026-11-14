@@ -43,7 +43,7 @@ export default function Styleguide() {
 
       <Section title="Theme">
         <div className="row"><ThemeToggle /><div className="sg__theme"><ThemeChoice /></div></div>
-        <p className="text-sm muted">Stored in localStorage as <code>cb_theme</code>. "System" follows the OS setting live.</p>
+        <p className="text-sm muted">Stored in localStorage as <code>cb_theme</code>. &quot;System&quot; follows the OS setting live.</p>
       </Section>
 
       <Section title="Brand">
@@ -163,7 +163,7 @@ export default function Styleguide() {
         <Field label="Comment"><textarea className="textarea" /></Field>
       </Modal>
       <ConfirmDialog open={modal === "confirm"} title="Mark as delivered?" confirmLabel="Yes, delivered" onClose={() => setModal(null)} onConfirm={() => setModal(null)}>
-        <p>This can't be undone.</p>
+        <p>This can&apos;t be undone.</p>
       </ConfirmDialog>
       <Card><CardHead title="Card head" /><div className="card__body">Card body</div></Card>
     </div>

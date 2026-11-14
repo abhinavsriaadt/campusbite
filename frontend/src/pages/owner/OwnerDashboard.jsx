@@ -40,7 +40,7 @@ export default function OwnerDashboard() {
           <h1>{restaurant.data?.name || "Dashboard"}</h1>
           <p className="row">
             {restaurant.data && <Badge tone={restaurant.data.is_open ? "success" : "grey"} dot>{restaurant.data.is_open ? "Open for orders" : "Closed"}</Badge>}
-            <span>Here's how today is going.</span>
+            <span>Here&apos;s how today is going.</span>
           </p>
         </div>
         <div className="row">

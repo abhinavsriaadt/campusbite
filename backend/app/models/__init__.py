@@ -8,7 +8,6 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Column,
-    Enum as SAEnum,
     ForeignKey,
     Index,
     Integer,
@@ -17,6 +16,9 @@ from sqlalchemy import (
     Table,
     Text,
     UniqueConstraint,
+)
+from sqlalchemy import (
+    Enum as SAEnum,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship

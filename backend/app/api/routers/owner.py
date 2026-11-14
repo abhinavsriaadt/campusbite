@@ -7,6 +7,7 @@ from sqlalchemy import case, func, select
 
 from app.api.deps import DbSession, OwnerRestaurant, OwnerUser, PageParams
 from app.api.routers.restaurants import _like, _menu_sort
+from app.core.database import utcnow
 from app.models import AdminReminderLog, MenuItem, Order, OrderStatus, User, UserRole
 from app.schemas import (
     AvailabilityUpdate,
@@ -24,7 +25,6 @@ from app.services.order_service import ACTIVE_STATUSES
 from app.services.pagination import page_response, paginate
 from app.services.reminder_service import generate_reminders
 from app.services.stats_service import restaurant_stats
-from app.core.database import utcnow
 
 router = APIRouter(prefix="/owner", tags=["Restaurant Owner"])
 

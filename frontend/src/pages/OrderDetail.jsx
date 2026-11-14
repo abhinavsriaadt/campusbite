@@ -22,14 +22,15 @@ export default function OrderDetail() {
   const { id } = useParams();
   const { user } = useAuth();
   const order = useAsync(() => ordersApi.get(id), [id]);
+  const { setData } = order; // stable (useCallback)
 
   // Light polling while the order is in progress so the status stays current (no websockets needed).
   const live = order.data && !FINISHED.includes(order.data.status);
   useEffect(() => {
     if (!live) return undefined;
-    const t = setInterval(() => document.visibilityState === "visible" && ordersApi.get(id).then((o) => order.setData(o)).catch(() => {}), 20000);
+    const t = setInterval(() => document.visibilityState === "visible" && ordersApi.get(id).then(setData).catch(() => {}), 20000);
     return () => clearInterval(t);
-  }, [live, id, order.setData]);
+  }, [live, id, setData]);
 
   const [backTo, backLabel] = BACK[user.role];
   if (order.error) return <><Link to={backTo} className="back-link"><Icon name="arrowLeft" /> {backLabel}</Link><ErrorState message={order.error} onRetry={order.reload} /></>;

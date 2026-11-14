@@ -55,7 +55,7 @@ def register(data: RegisterRequest, db: DbSession):
         db.commit()
     except IntegrityError:  # a concurrent sign-up with the same email won the race
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_DUPLICATE)
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=_DUPLICATE) from None
     db.refresh(user)
     return _token_response(user)
 

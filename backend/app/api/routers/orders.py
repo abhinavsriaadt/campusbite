@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CurrentUser, CustomerUser, DbSession, OwnerUser, PageParams
-from app.models import Order, Restaurant, Review, ReturnRequest, UserRole
+from app.models import Order, Restaurant, ReturnRequest, Review, UserRole
 from app.schemas import (
     AssignRequest,
     CancelRequest,
@@ -137,7 +137,7 @@ def review_order(order_id: int, data: ReviewCreate, customer: CustomerUser, db: 
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="You have already reviewed this order")
+        raise HTTPException(status_code=409, detail="You have already reviewed this order") from None
     return svc.serialize_order(svc.reload(db, order_id, customer), customer)
 
 
@@ -154,5 +154,5 @@ def request_return(order_id: int, data: ReturnCreate, customer: CustomerUser, db
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=409, detail="A return/refund request already exists for this order")
+        raise HTTPException(status_code=409, detail="A return/refund request already exists for this order") from None
     return svc.serialize_order(svc.reload(db, order_id, customer), customer)

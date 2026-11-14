@@ -139,7 +139,7 @@ def parse_statuses(raw: str | None) -> list[OrderStatus] | None:
         try:
             out.append(OrderStatus(part))
         except ValueError:
-            raise HTTPException(status_code=422, detail=f"Invalid order status filter: {part}")
+            raise HTTPException(status_code=422, detail=f"Invalid order status filter: {part}") from None
     return out or None
 
 

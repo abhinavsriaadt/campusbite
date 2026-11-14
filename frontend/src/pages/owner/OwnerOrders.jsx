@@ -73,7 +73,7 @@ function Board() {
         <span className="text-sm muted">{state.total} active order{state.total === 1 ? "" : "s"} · refreshes every 30 s</span>
         <Button variant="ghost" size="sm" icon="refresh" loading={state.loading} onClick={load}>Refresh</Button>
       </div>
-      {state.total > BOARD_LIMIT && <Alert type="info">Showing the {BOARD_LIMIT} oldest active orders. Use "All orders" to see the rest.</Alert>}
+      {state.total > BOARD_LIMIT && <Alert type="info">Showing the {BOARD_LIMIT} oldest active orders. Use &quot;All orders&quot; to see the rest.</Alert>}
       {isMobile && (
         <Tabs label="Board columns" value={col} onChange={setCol} items={COLUMNS.map((c) => ({ value: c.key, label: c.label, count: byCol[c.key].length }))} />
       )}

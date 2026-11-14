@@ -79,7 +79,7 @@ export default function OrderActions({ order, onUpdated, size = "sm", block = fa
       {modal === "DELIVERED" && (
         <ConfirmDialog open title={`Mark order #${order.id} as delivered?`} confirmLabel="Yes, delivered" variant="primary"
           busy={busy === "DELIVERED"} onClose={() => setModal(null)} onConfirm={() => setStatus("DELIVERED")}>
-          <p>Only confirm once the food is in the customer's hands. This can't be undone.</p>
+          <p>Only confirm once the food is in the customer&apos;s hands. This can&apos;t be undone.</p>
         </ConfirmDialog>
       )}
       {modal === "cancel" && (
@@ -116,7 +116,7 @@ function CancelDialog({ order, isOwner, busy, onClose, onConfirm }) {
     <ConfirmDialog open title={isOwner ? `Reject order #${order.id}?` : `Cancel order #${order.id}?`}
       confirmLabel={isOwner ? "Reject order" : "Cancel order"} cancelLabel="Keep order" variant="danger" busy={busy}
       onClose={onClose} onConfirm={() => onConfirm(reason.trim())}>
-      <p className="muted">The {money(order.total_amount)} payment is refunded automatically. This can't be undone.</p>
+      <p className="muted">The {money(order.total_amount)} payment is refunded automatically. This can&apos;t be undone.</p>
       <Field label="Reason (optional)">
         <textarea className="textarea" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)}
           placeholder={isOwner ? "e.g. Kitchen closing early" : "e.g. Ordered by mistake"} />
@@ -209,7 +209,7 @@ export function ResolveReturnDialog({ request, approve, busy, onClose, onConfirm
       title={approve ? `Approve refund of ${money(request.order_total)}?` : "Reject this refund request?"}
       confirmLabel={approve ? "Approve refund" : "Reject request"} variant={approve ? "success" : "danger"}>
       <div className="quote">
-        <span className="eyebrow">Customer's reason · order #{request.order_id}</span>
+        <span className="eyebrow">Customer&apos;s reason · order #{request.order_id}</span>
         <p>{request.reason}</p>
       </div>
       <p className="text-sm muted">

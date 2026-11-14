@@ -8,7 +8,7 @@ import Icon from "./Icon";
 export default function Pagination({ list, page, pages, onChange }) {
   if (list) {
     if (list.isMobile) {
-      if (!list.hasMore) return list.pages > 1 ? <p className="pager__more text-sm muted">You've reached the end</p> : null;
+      if (!list.hasMore) return list.pages > 1 ? <p className="pager__more text-sm muted">You&apos;ve reached the end</p> : null;
       return (
         <div className="pager__more">
           <Button variant="secondary" block loading={list.loading} onClick={list.loadMore}>Load more</Button>

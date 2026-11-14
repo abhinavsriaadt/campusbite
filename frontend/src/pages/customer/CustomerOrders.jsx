@@ -32,7 +32,7 @@ export default function CustomerOrders() {
   return (
     <>
       <div className="page-head">
-        <div><h1>My orders</h1><p>Track what's on the way and manage past orders.</p></div>
+        <div><h1>My orders</h1><p>Track what&apos;s on the way and manage past orders.</p></div>
         <Button to="/insights" variant="secondary" icon="sparkles">Ask AI about my orders</Button>
       </div>
       <Tabs label="Orders" value={tab} onChange={switchTab} items={[

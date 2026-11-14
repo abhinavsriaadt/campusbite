@@ -10,7 +10,15 @@ from sqlalchemy.orm import joinedload, selectinload
 from app.api.deps import DbSession, PageParams
 from app.models import Category, MenuItem, Restaurant, Review, restaurant_categories
 from app.schemas import (
-    CategoryOut, DishSearchOut, MenuItemOut, MenuOut, MenuSection, Page, RestaurantDetailOut, RestaurantOut, ReviewOut,
+    CategoryOut,
+    DishSearchOut,
+    MenuItemOut,
+    MenuOut,
+    MenuSection,
+    Page,
+    RestaurantDetailOut,
+    RestaurantOut,
+    ReviewOut,
 )
 from app.services.pagination import page_response, paginate
 

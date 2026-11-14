@@ -82,6 +82,6 @@ async def reminder_loop(stop_event: asyncio.Event) -> None:
             logger.exception("Reminder job failed")
         try:
             await asyncio.wait_for(stop_event.wait(), timeout=interval)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pass
     logger.info("Reminder scheduler stopped")

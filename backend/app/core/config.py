@@ -56,7 +56,7 @@ class Settings(BaseSettings):
         try:
             ZoneInfo(v)
         except (ZoneInfoNotFoundError, ValueError):
-            raise ValueError(f"Unknown timezone: {v!r} (use an IANA name like 'Asia/Kolkata')")
+            raise ValueError(f"Unknown timezone: {v!r} (use an IANA name like 'Asia/Kolkata')") from None
         return v
 
     @field_validator("OPENAI_API_KEY")
