@@ -321,13 +321,13 @@ Images: seed data uses the `image_url` values in `backend/seed_data.json`.
 | Design item | Why it differs | What is shown instead |
 |---|---|---|
 | Delivery fee "₹0 Free on campus" | Totals are computed server-side (`DELIVERY_FEE`); showing ₹0 would misstate the bill | The server's real fee; it reads "Free on campus" only when the fee is 0 |
-| "₹ for two" on restaurant cards | No such data exists | The real rating count |
 | ETA on the live order card | No ETA data exists | "Updated N min ago" from the real status timestamp |
 | My Orders = Active/Past tabs only | Brief requires filtering by status **and date** | Tabs plus the status/date FilterBar |
 | Partner screens without filters | Brief requires filtering deliveries by status | Status FilterBar kept |
 | Filled buttons use `--brand-500` | §7 requires ≥ 4.5:1, but white on `--brand-500` is 3.87:1 (light) and 3.56:1 (dark) | All §2 values are unchanged. Fills use an added `--brand-fill` (#C93A22, 5.11:1) in both themes, plus `--success-fill` / `--danger-fill` for solid success/danger buttons, because the dark `-text` shades are too light to carry white text. `--brand-500` stays for indicators, focus, borders and charts |
 | Skeleton shimmer `--surface → --surface-2 → --surface` (dark) | A skeleton inside a card would have the same colour as the card, so it would be invisible | Skeleton blocks are `--surface-2` with a `--line` shimmer in dark mode |
-| Seed images from `backend/seed_data.json` | Seed data lives in `backend/app/seed.py` | `RESTAURANT_IMAGES` / `DISH_IMAGES` in `seed.py`: Unsplash photos, each checked by eye |
+| Seed images from `backend/seed_data.json` | The final dataset is `backend/seed_data_lucknow.json` | Its loremflickr `image_url` values are used as-is; if the host fails, the brand placeholder shows |
+| Menu price-range chips | Fixed price bands would be hard-coded prices in the UI | Min/max inputs whose hints show the menu's real price range from the API |
 | Placeholders use `--ink-300` | `--ink-300` on an input is 1.97:1 (light), which fails §2's QA check that placeholders are readable | Placeholders use `--ink-500` (≥ 4.5:1); `--ink-300` stays for disabled states and decorative marks |
 | Chips / small buttons 36px | §7 requires tap targets ≥ 44px | Added `--control-sm`: 44px on touch-sized screens, 36px from 768px up; delivery-partner screens use 48px for every control |
 | §10 Email OTP as a separate passwordless tab (`/auth/otp/request`, `/auth/otp/verify`) | The later auth brief makes the code a **second step after the bcrypt password** (sign-up verification and every login), keeping password auth | One shared `/verify` page after Register/Login. The endpoints are `/auth/verify-email`, `/auth/login/verify` and `/auth/otp/resend`. The §10 UI rules are unchanged: 6 boxes, paste/autofill, countdown, spam hint, Change email, filled boxes on `--brand-500`. |

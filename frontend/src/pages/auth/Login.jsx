@@ -6,10 +6,12 @@ import { useAuth } from "../../context/AuthContext";
 import { postLoginTarget, ROLE_HOME } from "../../utils/constants";
 import AuthLayout from "./AuthLayout";
 
+// Seeded demo accounts (backend/seed_data_lucknow.json). Shown only when VITE_SHOW_DEMO_ACCOUNTS isn't "false".
+const DEMO_PASSWORD = "Password@123";
 const DEMO = [
-  ["Customer", "customer@campusbite.dev"],
-  ["Restaurant owner", "owner@campusbite.dev"],
-  ["Delivery partner", "rider@campusbite.dev"],
+  ["Customer", "aarav@campusbite.dev"],
+  ["Restaurant owner", "owner.tundaykababi@campusbite.dev"],
+  ["Delivery partner", "imran.rider@campusbite.dev"],
 ];
 const SHOW_DEMO = import.meta.env.VITE_SHOW_DEMO_ACCOUNTS !== "false";
 
@@ -64,10 +66,10 @@ export default function Login() {
       <p className="text-sm muted center">New to CampusBite? <Link to="/register">Create an account</Link></p>
       {SHOW_DEMO && (
         <div className="demo">
-          <p className="text-sm strong">Demo accounts · password <code>CampusBite@123</code></p>
+          <p className="text-sm strong">Demo accounts · password <code>{DEMO_PASSWORD}</code></p>
           <p className="text-xs muted">Next you'll be asked for a 6-digit code. Demo inboxes don't exist, so in console mode the code is printed in the backend logs.</p>
           {DEMO.map(([label, email]) => (
-            <button key={email} type="button" className="demo__row" onClick={() => setForm({ email, password: "CampusBite@123" })}>
+            <button key={email} type="button" className="demo__row" onClick={() => setForm({ email, password: DEMO_PASSWORD })}>
               <span className="muted">{label}</span><span className="demo__email">{email}</span>
             </button>
           ))}

@@ -4,18 +4,22 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     CheckConstraint,
+    Column,
     Enum as SAEnum,
     ForeignKey,
     Index,
     Integer,
     Numeric,
     String,
+    Table,
     Text,
     UniqueConstraint,
     false,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base, UTCDateTime, utcnow
@@ -85,6 +89,28 @@ class OtpCode(TimestampMixin, Base):
     consumed_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
 
 
+class Category(Base):
+    """Browse category (North Indian, Rolls, Coffee, ...). A restaurant can be in several."""
+
+    __tablename__ = "categories"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    slug: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(80), nullable=False)
+    description: Mapped[str | None] = mapped_column(String(255))
+
+
+restaurant_categories = Table(
+    "restaurant_categories",
+    Base.metadata,
+    Column("restaurant_id", ForeignKey("restaurants.id", ondelete="CASCADE"), primary_key=True),
+    Column("category_id", ForeignKey("categories.id", ondelete="CASCADE"), primary_key=True, index=True),
+)
+
+# Category slugs on a dish. JSONB on PostgreSQL, JSON elsewhere (tests use SQLite).
+Tags = JSON().with_variant(JSONB(), "postgresql")
+
+
 class Restaurant(TimestampMixin, Base):
     __tablename__ = "restaurants"
 
@@ -101,8 +127,12 @@ class Restaurant(TimestampMixin, Base):
     is_open: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     rating_avg: Mapped[Decimal] = mapped_column(Numeric(3, 2), default=0, nullable=False)
     rating_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    cost_for_two: Mapped[int | None] = mapped_column(Integer)
+    primary_category_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id", ondelete="SET NULL"))
 
     owner: Mapped[User] = relationship(back_populates="restaurant")
+    primary_category: Mapped[Category | None] = relationship()
+    categories: Mapped[list[Category]] = relationship(secondary=restaurant_categories, order_by=Category.id)
     menu_items: Mapped[list["MenuItem"]] = relationship(
         back_populates="restaurant", cascade="all, delete-orphan"
     )
@@ -127,6 +157,7 @@ class MenuItem(TimestampMixin, Base):
     is_veg: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     image_url: Mapped[str | None] = mapped_column(String(500))
     is_available: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    tags: Mapped[list[str]] = mapped_column(Tags, default=list, server_default="[]", nullable=False)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, onupdate=utcnow, nullable=False)
 
     restaurant: Mapped[Restaurant] = relationship(back_populates="menu_items")
@@ -287,6 +318,8 @@ class AdminReminderLog(TimestampMixin, Base):
 
 __all__ = [
     "OtpCode",
+    "Category",
+    "restaurant_categories",
     "Base",
     "User",
     "Restaurant",

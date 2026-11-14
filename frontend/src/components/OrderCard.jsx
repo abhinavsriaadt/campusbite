@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { errorMessage } from "../api/client";
-import { catalogApi, ordersApi } from "../api/endpoints";
+import { catalogApi, menuDishes, ordersApi } from "../api/endpoints";
 import { useCart } from "../context/CartContext";
 import { useToast } from "../context/ToastContext";
 import { itemSummary, money, timeAgo } from "../utils/format";
@@ -26,11 +26,11 @@ function useReorder(order) {
     try {
       const [detail, menu] = await Promise.all([
         ordersApi.get(order.id),
-        catalogApi.menu(order.restaurant.id, { available_only: true, page_size: 100 }),
+        catalogApi.menu(order.restaurant.id, { available_only: true }),
       ]);
       const restaurant = await catalogApi.restaurant(order.restaurant.id);
       if (!restaurant.is_open) throw new Error(`${restaurant.name} isn't accepting orders right now.`);
-      const byId = new Map(menu.items.map((m) => [m.id, m]));
+      const byId = new Map(menuDishes(menu).map((m) => [m.id, m]));
       const lines = detail.items.filter((i) => byId.has(i.menu_item_id)).map((i) => ({ dish: byId.get(i.menu_item_id), quantity: i.quantity }));
       if (!lines.length) throw new Error("None of these dishes are available right now.");
       const skipped = detail.items.length - lines.length;

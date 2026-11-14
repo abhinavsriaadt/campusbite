@@ -109,7 +109,7 @@ def world(client):
     """A restaurant with two dishes, a customer, a second customer and two delivery partners."""
     owner = register(client, "owner@test.com", "restaurant_owner", phone="9876543210")
     owner2 = register(client, "owner2@test.com", "restaurant_owner")
-    cust = register(client, "cust@test.com", address="12 MG Road, Bengaluru", phone="9000000001")
+    cust = register(client, "cust@test.com", address="12 MG Marg, Hazratganj, Lucknow", phone="9000000001")
     cust2 = register(client, "cust2@test.com")
     rider = register(client, "rider@test.com", "delivery_partner", phone="9111111111")
     rider2 = register(client, "rider2@test.com", "delivery_partner")
@@ -128,7 +128,7 @@ def world(client):
     def place(actor=cust, items=None):
         items = items or [{"menu_item_id": d1["id"], "quantity": 2}, {"menu_item_id": d2["id"], "quantity": 3}]
         r = actor.post("/api/orders", {"restaurant_id": rest_id, "items": items,
-                                       "delivery_address": "12 MG Road, Bengaluru", "payment_method": "upi"})
+                                       "delivery_address": "12 MG Marg, Hazratganj, Lucknow", "payment_method": "upi"})
         assert r.status_code == 201, r.text
         return r.json()
 

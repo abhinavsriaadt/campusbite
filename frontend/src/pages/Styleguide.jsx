@@ -5,12 +5,12 @@ import {
   ListSkeleton, Modal, OrderStepper, Pagination, PaymentBadge, QtyStepper, RatingChip, RestaurantCard, RestaurantCardSkeleton,
   ReturnBadge, Spinner, StarInput, Stars, StatCard, StatusBadge, Switch, Tabs, ThemeChoice, ThemeToggle, VegMark,
 } from "../components/ui";
+import { catalogApi, menuDishes } from "../api/endpoints";
 import { useToast } from "../context/ToastContext";
+import { useAsync } from "../hooks/useAsync";
 import { ALL_STATUSES } from "../utils/status";
 
 /** Dev-only catalogue of every UI component and state (DESIGN.md §8). Not routed in production builds. */
-const IMG = "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=70";
-const DISH = { id: 1, name: "Margherita Pizza", price: 299, is_veg: true, is_available: true, description: "San Marzano tomato, mozzarella and basil, baked in a wood-fired oven until blistered.", image_url: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=400&q=70" };
 const now = Date.now();
 const iso = (minAgo) => new Date(now - minAgo * 60000).toISOString();
 const HISTORY = ["PLACED", "ACCEPTED", "PREPARING"].map((s, i) => ({ id: i, to_status: s, created_at: iso(40 - i * 10) }));
@@ -28,6 +28,15 @@ export default function Styleguide() {
   const [otp, setOtp] = useState(["4", "2", "", "", "", ""]);
   const [modal, setModal] = useState(null);
   const [filters, setFilters] = useState({ status: "", date_from: "", date_to: "" });
+  // Cards render a real restaurant and dish from the API (no mock names or prices).
+  const sample = useAsync(async () => {
+    const list = await catalogApi.restaurants({ page_size: 1 });
+    const r = list.items[0];
+    const menu = r ? await catalogApi.menu(r.id) : null;
+    return { r, total: list.total, dishes: menuDishes(menu), menuTotal: menu?.total ?? 0 };
+  }, []);
+  const r = sample.data?.r;
+  const dish = sample.data?.dishes[0];
 
   return (
     <div className="sg">
@@ -91,18 +100,29 @@ export default function Styleguide() {
 
       <Section title="Cards">
         <div className="grid-cards">
-          <RestaurantCard r={{ id: 1, name: "Napoli Slice", cuisine: "Italian", image_url: IMG, is_open: true, rating_avg: 4.4, rating_count: 12 }} />
-          <RestaurantCard r={{ id: 2, name: "Closed Kitchen", cuisine: "Italian", image_url: IMG, is_open: false, rating_avg: 3.8, rating_count: 3 }} />
-          <RestaurantCard r={{ id: 3, name: "No Photo Yet", cuisine: null, image_url: null, is_open: true, rating_avg: 0, rating_count: 0 }} />
+          {sample.error ? <ErrorState message={sample.error} onRetry={sample.reload} />
+            : !sample.data ? <><RestaurantCardSkeleton /><RestaurantCardSkeleton /></>
+            : !r ? <EmptyState icon="store" title="No restaurants yet">Seed the database to preview cards.</EmptyState>
+            : (
+              <>
+                <RestaurantCard r={r} />
+                <RestaurantCard r={{ ...r, id: -1, is_open: false }} />
+                <RestaurantCard r={{ ...r, id: -2, image_url: null, rating_count: 0, categories: [], cost_for_two: null }} />
+              </>
+            )}
           <RestaurantCardSkeleton />
         </div>
         <Card className="card--pad">
-          <DishCard dish={DISH} canOrder qty={0} onAdd={() => toast.info("ADD pressed")} onQty={() => {}} />
-          <DishCard dish={{ ...DISH, id: 2 }} canOrder qty={qty} onQty={setQty} />
-          <DishCard dish={{ ...DISH, id: 3, is_veg: false, name: "Pepperoni Pizza", is_available: false }} canOrder qty={0} />
+          {dish && (
+            <>
+              <DishCard dish={dish} canOrder qty={0} onAdd={() => toast.info("ADD pressed")} onQty={() => {}} />
+              <DishCard dish={{ ...dish, id: -1 }} canOrder qty={qty} onQty={setQty} highlight />
+              <DishCard dish={{ ...dish, id: -2, is_available: false }} canOrder qty={0} />
+            </>
+          )}
           <DishSkeleton />
         </Card>
-        <div className="grid-stats"><StatCard label="Orders today" value="12" delta="+3 vs yesterday" /><StatCard label="Revenue" value="₹8,420.00" /></div>
+        {sample.data && <div className="grid-stats"><StatCard label="Restaurants" value={String(sample.data.total)} /><StatCard label={`Dishes at ${r?.name ?? "—"}`} value={String(sample.data.menuTotal)} /></div>}
       </Section>
 
       <Section title="Order stepper">

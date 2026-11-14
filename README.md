@@ -49,8 +49,8 @@ The React frontend talks to a FastAPI backend over REST. Data lives in PostgreSQ
 - Brute-force throttling on login, code verification and resend (10 requests per 10 minutes per IP and email).
 
 ### Customer
-- Restaurant listing with search, cuisine chips and pagination.
-- Restaurant menu with search, category filter, min/max price, veg-only filter and sorting.
+- Restaurant listing with search, **category chips** (with restaurant counts, kept in the URL as `?category=coffee`) and pagination. Cards show cuisine, rating, cost for two and up to two categories.
+- Restaurant menu grouped into sticky sections, with name search, min/max price (hints show the menu's real price range) and a veg-only toggle. Opening a menu from a category (`?tag=rolls`) scrolls to and highlights the matching dishes.
 - Dish search across all restaurants by name and price range.
 - Cart (one restaurant per order) kept in React state and persisted per user in `localStorage`, with a sticky "View cart" bar.
 - **Reorder** a past order: dishes still on the menu go back into the cart and the server re-prices them.
@@ -103,7 +103,7 @@ PLACED ──► ACCEPTED ──► PREPARING ──► READY ──► ASSIGNED
                                          └──────────────────────────────────────────┘
 ```
 
-**Database tables:** `users`, `restaurants`, `menu_items`, `orders`, `order_items`, `order_status_history`, `reviews`, `payment_ledger`, `return_requests`, `admin_reminder_logs`, `otp_codes`.
+**Database tables:** `users`, `restaurants`, `menu_items`, `orders`, `order_items`, `order_status_history`, `reviews`, `payment_ledger`, `return_requests`, `admin_reminder_logs`, `otp_codes`, `categories`, `restaurant_categories`.
 
 Key relationships:
 
@@ -146,7 +146,7 @@ On startup the backend container:
 
 1. Waits for Postgres to be healthy.
 2. Runs `alembic upgrade head`.
-3. Seeds demo data if `SEED_DEMO_DATA=true`. This is idempotent.
+3. Seeds the Lucknow demo data if `SEED_DEMO_DATA=true`. This is idempotent (see [Seed data](#seed-data)).
 4. Starts Uvicorn on **http://localhost:8000**.
 
 Swagger docs are at **http://localhost:8000/docs**.
@@ -162,24 +162,40 @@ npm run dev                # → http://localhost:5173
 
 Production build: `npm run build`, which outputs to `frontend/dist/`.
 
+### Seed data
+
+The demo data lives in **`backend/seed_data_lucknow.json`**: 45 Lucknow restaurants, 9 categories and 1,000 menu items (20–25 per restaurant), plus demo customers and delivery partners. `backend/app/seed.py` loads it. A restaurant can be in several categories (Tunday Kababi is in both Mughlai and Rolls), and each dish carries category tags.
+
+The 9 categories are **North Indian, Mughlai, South Indian, Rolls, Coffee, Sweets, Cafe, Cake and Momos**.
+
+```bash
+docker compose exec backend python seed.py --reset   # wipe restaurants/menus/orders and reload the file
+docker compose exec backend python seed.py           # no-op if categories already exist
+```
+
+- `--reset` runs in one transaction. It deletes reminders, reviews, returns, payments, orders, menus, categories, restaurants and the seeded owner accounts, then reloads everything. Seeded customers and riders, and anyone who signed up themselves, are kept. (A self-registered owner's restaurant is removed too, because every restaurant is replaced.)
+- The seed also creates 20 orders over the last 14 days through the real order service. They cover every status, with payment ledger rows, 3 reviews, 1 pending refund request and 2 orders left `PLACED`/`ACCEPTED` for more than 15 minutes, so owner reminders appear straight away.
+- The script prints a summary: `45 restaurants, 9 categories, 1000 menu items, 20 orders`.
+
+> Demo data for educational use. Not affiliated with any restaurant; menus and prices are illustrative.
+
 ### Demo accounts (seeded)
 
-The password for every demo account is `CampusBite@123`. Demo accounts are **pre-verified**, but logging in still asks for a 6-digit code. Their inboxes don't exist, so with the default `OTP_DELIVERY=console` the code is printed in the backend logs:
+Every demo account is `@campusbite.dev` with the password **`Password@123`**. Demo accounts are **pre-verified**, but logging in still asks for a 6-digit code. Their inboxes don't exist, so with the default `OTP_DELIVERY=console` the code is printed in the backend logs:
 
 ```bash
 docker compose logs -f backend | grep OTP
-# [OTP][login] to=customer@campusbite.dev code=048406
+# [OTP][login] to=aarav@campusbite.dev code=048406
 ```
 
 | Role | Email |
 |---|---|
-| Customer (has order history) | `customer@campusbite.dev` |
-| Customer | `diya@campusbite.dev` |
-| Restaurant owner (Spice Route) | `owner@campusbite.dev` |
-| Other restaurant owners | `owner2@campusbite.dev` … `owner6@campusbite.dev` |
-| Delivery partner | `rider@campusbite.dev`, `rider2@campusbite.dev` |
+| Customers (with order history) | `aarav@campusbite.dev`, `sana@campusbite.dev`, `rohit@campusbite.dev` |
+| Restaurant owner (Tunday Kababi: most demo orders and live reminders) | `owner.tundaykababi@campusbite.dev` |
+| Other restaurant owners | `owner.<restaurant>@campusbite.dev`, e.g. `owner.starbucks@campusbite.dev` (each owner's email is in the data file) |
+| Delivery partners | `imran.rider@campusbite.dev`, `deepak.rider@campusbite.dev`, `vikas.rider@campusbite.dev` |
 
-Demo restaurants and most dishes use free Unsplash photos (hotlinked, as Unsplash requires). Each photo was checked by eye against its dish, and dishes without a verified photo show a neutral placeholder.
+Photos come from the `image_url` values in the data file (loremflickr keyword images, hotlinked). They aren't checked against each dish. If the image host is unavailable, cards and dishes show the brand placeholder instead.
 
 Set `SEED_DEMO_DATA=false` and `VITE_SHOW_DEMO_ACCOUNTS=false` for a real deployment.
 
@@ -276,7 +292,7 @@ Log in:   POST /auth/login (password) ──► code emailed ──► POST /aut
   alembic revision --autogenerate -m "describe change"
   alembic upgrade head
   ```
-- **Seed demo data manually:** `python -m app.seed`. It is safe to re-run.
+- **Seed demo data manually:** `python seed.py` (safe to re-run) or `python seed.py --reset` to reload it.
 - **Reset:** `docker compose down -v && docker compose up -d`.
 
 ## Running the backend without Docker
@@ -287,7 +303,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 cp .env.example .env          # set JWT_SECRET_KEY; DATABASE_URL defaults to SQLite
 alembic upgrade head
-python -m app.seed            # optional demo data
+python seed.py                # optional demo data (--reset to reload)
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -309,10 +325,11 @@ All routes are prefixed with `/api`. Lists return `{items, total, page, page_siz
 | `POST /auth/login/verify` | public | `{email, code}` → JWT |
 | `POST /auth/otp/resend` | public | `{email, purpose}` → new code (same reply whether or not the account exists; `429` + `Retry-After` during the cooldown) |
 | `GET / PATCH /auth/me` | any | Current profile |
-| `GET /restaurants` | public | List restaurants (`q`, `cuisine`, `open_only`, `sort`) |
+| `GET /categories` | public | `[{slug, name, description, restaurant_count}]` |
+| `GET /restaurants` | public | List restaurants (`category` slug, `search`/`q`, `cuisine`, `open_only`, `sort`, `page`, `size`/`page_size`). Items include `categories`, `primary_category`, `cost_for_two`, `avg_rating`, `review_count` |
 | `GET /restaurants/cuisines` | public | Distinct cuisines |
-| `GET /restaurants/{id}` | public | Restaurant details and menu categories |
-| `GET /restaurants/{id}/menu` | public | Menu (`q`, `min_price`, `max_price`, `category`, `veg_only`, `available_only`, `sort`) |
+| `GET /restaurants/{id}` | public | Restaurant details and its menu `sections` |
+| `GET /restaurants/{id}/menu` | public | Menu grouped by section: `{sections: [{name, items}], total, price_min, price_max}` (`tag`, `search`/`q`, `min_price`, `max_price`, `veg_only`, `available_only`, `sort`) |
 | `GET /restaurants/{id}/reviews` | public | Reviews |
 | `GET /dishes` | public | Search dishes across restaurants by name and price |
 | `POST /orders/quote` | customer | Server-side price preview of a basket |
@@ -365,7 +382,7 @@ cd backend && source .venv/bin/activate
 pytest -q
 ```
 
-69 tests cover:
+76 tests cover:
 
 - **Auth:** registration, login, hashing, token validation.
 - **Email OTP:** no token before verification, forged tokens for unverified users are rejected, single use, the attempt countdown and lockout, expiry, the resend cooldown and `Retry-After`, a new code invalidating the old one, identical `401`s, unverified versus verified login, `OTP_ON_LOGIN=false`, re-registration, email normalisation, rate limits, the email templates, and mail failures never breaking a request.
@@ -375,6 +392,7 @@ pytest -q
 - **Payments:** ledger entries.
 - **Owner features:** statistics accuracy, reminder generation, deduplication and auto-resolution.
 - **AI:** context isolation (a mocked OpenAI client verifies no foreign orders are sent), totals over the full history even when the detail rows are capped, app rate limiting, and mapping of OpenAI `429`.
+- **Catalogue and seed data:** category counts, the many-to-many category filter, menu grouping and `tag` filter, the data file's shape (45 / 9 / 1000, 20–25 dishes each), and `seed --reset` keeping self-registered users.
 - **Timezones:** orders just after and just before local midnight land on the correct local day in filters, dashboard counts and the chart.
 - **Middleware and health:** logging and timing headers; `/health` returns `503` when the database is down.
 
@@ -389,14 +407,14 @@ npm run e2e        # CHROME_PATH=/path/to/chrome and E2E_BASE_URL=... are option
 
 It covers this flow:
 
-1. Customer adds dishes (sticky cart bar), searches the menu, sees the server quote and pays (mock), then gets a success screen and the tracking page.
-2. Owner moves the order across the Kanban board (New → Accepted → Preparing → Ready) and assigns a rider.
+1. Customer filters by the **Coffee** chip (URL `?category=coffee`), opens Starbucks with its coffee dishes highlighted, adds 2 dishes (sticky cart bar), searches the menu, sees the server quote and pays (mock), then gets a success screen and the tracking page.
+2. The Starbucks owner moves the order across the Kanban board (New → Accepted → Preparing → Ready) and assigns a rider.
 3. Rider, on a 390 px phone, sees the tap-to-call card, picks up, confirms delivery, and finds the order in history.
 4. Customer reviews, requests a refund, and uses Reorder (re-quoted by the server).
 5. Owner approves the refund through the confirm step. The order becomes Refunded with a refund ledger entry.
 6. A new customer signs up: no token before the code, `/verify` survives a refresh, a wrong code shows the attempts left, and the right code logs in.
 
-It also checks role-based redirects, the mobile tab bar, dark mode with no horizontal overflow, the one-restaurant cart prompt, and that the theme toggle works before login, persists and applies without a flash. It fails on any browser console error.
+It also checks role-based redirects, the mobile tab bar, dark mode with no horizontal overflow, the one-restaurant cart prompt, and that the theme toggle works before login, persists and applies without a flash. It fails on any browser console error, except failed loads from the third-party demo-image host.
 
 ### Design system
 
@@ -434,7 +452,9 @@ campusbite/
 │   │   ├── api/              # dependencies (auth/RBAC) + routers
 │   │   ├── services/         # order state machine, stats, reminders, AI, OTP + mailer, pagination
 │   │   ├── templates/emails/ # OTP email (HTML + plain text)
-│   │   └── seed.py           # demo data
+│   │   └── seed.py           # loads seed_data_lucknow.json (--reset to reload)
+│   ├── seed.py               # `python seed.py [--reset]` entry point
+│   ├── seed_data_lucknow.json # demo restaurants, categories, menus, users
 │   └── tests/                # pytest suite
 └── frontend/
     ├── index.html · vite.config.js · .env.example

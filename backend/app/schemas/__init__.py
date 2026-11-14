@@ -4,7 +4,9 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated, Generic, Literal, TypeVar
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, PlainSerializer, field_validator, model_validator
+from pydantic import (
+    BaseModel, ConfigDict, EmailStr, Field, PlainSerializer, computed_field, field_validator, model_validator,
+)
 
 from app.models.enums import (
     LedgerEntryStatus,
@@ -158,6 +160,16 @@ class TokenResponse(BaseModel):
 
 
 # --------------------------------------------------------------------------- restaurants & menu
+class CategoryBrief(ORMModel):
+    slug: str
+    name: str
+
+
+class CategoryOut(CategoryBrief):
+    description: str | None
+    restaurant_count: int
+
+
 class RestaurantOut(ORMModel):
     id: int
     name: str
@@ -169,7 +181,20 @@ class RestaurantOut(ORMModel):
     is_open: bool
     rating_avg: MoneyOut
     rating_count: int
+    cost_for_two: int | None = None
+    primary_category: CategoryBrief | None = None
+    categories: list[CategoryBrief] = []
     created_at: datetime
+
+    @computed_field
+    @property
+    def avg_rating(self) -> float:
+        return float(self.rating_avg)
+
+    @computed_field
+    @property
+    def review_count(self) -> int:
+        return self.rating_count
 
 
 class RestaurantUpdate(BaseModel):
@@ -222,8 +247,24 @@ class MenuItemOut(ORMModel):
     is_veg: bool
     image_url: str | None
     is_available: bool
+    tags: list[str] = []
     created_at: datetime
     updated_at: datetime
+
+
+class MenuSection(BaseModel):
+    name: str
+    items: list[MenuItemOut]
+
+
+class MenuOut(BaseModel):
+    """A restaurant's menu grouped by section (MenuItem.category), in menu order."""
+
+    restaurant_id: int
+    total: int = Field(description="Dishes matching the filters")
+    price_min: MoneyOut | None = Field(description="Cheapest dish on the whole (unfiltered) menu")
+    price_max: MoneyOut | None = Field(description="Most expensive dish on the whole (unfiltered) menu")
+    sections: list[MenuSection]
 
 
 class DishSearchOut(MenuItemOut):
@@ -240,7 +281,7 @@ class ReviewOut(ORMModel):
 
 
 class RestaurantDetailOut(RestaurantOut):
-    categories: list[str]
+    sections: list[str] = Field(description="Menu section names, in menu order")
 
 
 # --------------------------------------------------------------------------- orders

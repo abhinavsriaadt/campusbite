@@ -53,29 +53,51 @@ export default function Restaurants() {
 }
 
 function RestaurantList({ q }) {
-  const [cuisine, setCuisine] = useState("");
-  const cuisines = useAsync(() => catalogApi.cuisines(), []);
-  const list = usePaged((page) => catalogApi.restaurants({ q, cuisine, page, page_size: 12 }), [q, cuisine]);
+  const [params, setParams] = useSearchParams();
+  const category = params.get("category") || "";
+  // Chip row: categories with their restaurant counts, plus the overall total for "All".
+  const chips = useAsync(() => Promise.all([catalogApi.categories(), catalogApi.restaurants({ page_size: 1 })]), []);
+  const list = usePaged((page) => catalogApi.restaurants({ q, category, page, page_size: 12 }), [q, category]);
+  const [cats, all] = chips.data || [[], null];
+  const current = cats.find((c) => c.slug === category);
+
+  const setCategory = (slug) => {
+    const next = new URLSearchParams(params);
+    slug ? next.set("category", slug) : next.delete("category");
+    setParams(next);
+  };
 
   return (
     <>
-      {cuisines.data?.length > 0 && (
-        <div className="chips home__chips" role="group" aria-label="Filter by cuisine">
-          <Chip active={!cuisine} onClick={() => setCuisine("")}>All</Chip>
-          {cuisines.data.map((c) => <Chip key={c} active={cuisine === c} onClick={() => setCuisine(cuisine === c ? "" : c)}>{c}</Chip>)}
-        </div>
-      )}
+      <div className="chips home__chips" role="group" aria-label="Filter by category" aria-busy={chips.loading || undefined}>
+        {chips.error ? (
+          <button type="button" className="linkbtn" onClick={chips.reload}>Couldn't load categories. Retry</button>
+        ) : !chips.data ? (
+          Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="skel-chip" />)
+        ) : (
+          <>
+            <Chip active={!category} count={all?.total} onClick={() => setCategory("")}>All</Chip>
+            {cats.map((c) => (
+              <Chip key={c.slug} active={category === c.slug} count={c.restaurant_count} title={c.description || undefined}
+                onClick={() => setCategory(category === c.slug ? "" : c.slug)}>{c.name}</Chip>
+            ))}
+          </>
+        )}
+      </div>
       {list.error ? <ErrorState message={list.error} onRetry={list.reload} />
         : !list.loaded ? <div className="grid-cards">{Array.from({ length: 6 }, (_, i) => <RestaurantCardSkeleton key={i} />)}</div>
         : !list.items.length ? (
-          <EmptyState icon="search" title="No restaurants found" action={(q || cuisine) && <Link to="/" onClick={() => setCuisine("")}>Clear search</Link>}>
-            Try a different name or cuisine.
+          <EmptyState icon="search" title={current && !q ? `No ${current.name} restaurants yet` : "No restaurants found"}
+            action={(q || category) && <Link to="/">Show all restaurants</Link>}>
+            Try a different name or category.
           </EmptyState>
         ) : (
           <>
-            <p className="text-sm muted list-count">{list.total} restaurant{list.total === 1 ? "" : "s"}</p>
+            <p className="text-sm muted list-count">
+              {list.loading ? "Updating…" : <>{list.total} restaurant{list.total === 1 ? "" : "s"}{current ? ` in ${current.name}` : ""}</>}
+            </p>
             <div className={`grid-cards${list.loading ? " is-refreshing" : ""}`}>
-              {list.items.map((r) => <RestaurantCard key={r.id} r={r} />)}
+              {list.items.map((r) => <RestaurantCard key={r.id} r={r} search={category ? `?tag=${encodeURIComponent(category)}` : ""} />)}
             </div>
             <Pagination list={list} />
           </>

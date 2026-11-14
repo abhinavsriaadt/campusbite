@@ -16,7 +16,11 @@ export const authApi = {
   updateMe: (body) => d(api.patch("/auth/me", body)),
 };
 
+/** Flatten a grouped menu ({sections: [{name, items}]}) into one list of dishes. */
+export const menuDishes = (menu) => (menu?.sections || []).flatMap((s) => s.items);
+
 export const catalogApi = {
+  categories: () => d(api.get("/categories")),
   restaurants: (params) => d(api.get("/restaurants", { params: clean(params) })),
   cuisines: () => d(api.get("/restaurants/cuisines")),
   restaurant: (id) => d(api.get(`/restaurants/${id}`)),
