@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  OtpInput,
+  Logo, LogoMonoWhite, OtpInput,
   Alert, Badge, Button, Card, CardHead, Chip, ConfirmDialog, DishCard, DishSkeleton, EmptyState, ErrorState, Field, FilterBar, Icon,
   ListSkeleton, Modal, OrderStepper, Pagination, PaymentBadge, QtyStepper, RatingChip, RestaurantCard, RestaurantCardSkeleton,
   ReturnBadge, Spinner, StarInput, Stars, StatCard, StatusBadge, Switch, Tabs, ThemeChoice, ThemeToggle, VegMark,
@@ -47,9 +47,28 @@ export default function Styleguide() {
         <p className="text-sm muted">Stored in localStorage as <code>cb_theme</code>. "System" follows the OS setting live.</p>
       </Section>
 
+      <Section title="Brand">
+        <div className="sg-brand">
+          {["light", "dark"].map((t) => (
+            <div key={t} className="sg-brand__panel" data-theme={t}>
+              <p className="text-xs muted">{t} theme</p>
+              <div className="row"><Logo theme={t} height={40} /><span className="text-xs muted">full · 40px (auth)</span></div>
+              <div className="row"><Logo theme={t} height={28} /><span className="text-xs muted">full · 28px (navbar ≥ 640px)</span></div>
+              <div className="row">
+                <Logo theme={t} variant="mark" height={56} /><Logo theme={t} variant="mark" height={32} /><Logo theme={t} variant="mark" height={16} />
+                <span className="text-xs muted">mark · 56 / 32 / 16px</span>
+              </div>
+            </div>
+          ))}
+          <div className="sg-brand__panel sg-brand__panel--brand">
+            <LogoMonoWhite height={32} /><span className="text-xs">LogoMonoWhite on a brand fill</span>
+          </div>
+        </div>
+      </Section>
+
       <Section title="Colour tokens">
         <div className="sg__swatches">
-          {["brand-500", "brand-600", "brand-50", "brand-text", "brand-fill", "on-brand", "ink-900", "ink-700", "ink-500", "ink-300", "line", "bg", "surface", "surface-2",
+          {["brand-500", "brand-600", "brand-50", "brand-text", "brand-text-tint", "brand-fill", "on-brand", "ink-900", "ink-700", "ink-500", "ink-300", "line", "bg", "surface", "surface-2",
             "success", "success-50", "success-text", "warning", "warning-50", "warning-text", "danger", "danger-50", "danger-text",
             "info", "info-50", "info-text", "neutral-50", "neutral-text", "veg", "nonveg"].map((t) => (
             <div key={t} className="sg__swatch"><span style={{ background: `var(--${t})` }} /><code>--{t}</code></div>

@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import AppShell from "./components/AppShell";
 import ProtectedRoute, { CustomerLanding } from "./components/ProtectedRoute";
-import { EmptyState, PageLoader } from "./components/ui";
+import { EmptyState, Logo, PageLoader } from "./components/ui";
 import { ROLES } from "./utils/constants";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -27,7 +27,7 @@ const Styleguide = import.meta.env.DEV ? lazy(() => import("./pages/Styleguide")
 
 function NotFound() {
   return (
-    <EmptyState icon="search" title="Page not found" action={<Link to="/">Go home →</Link>}>
+    <EmptyState media={<Logo variant="mark" height={56} className="empty__logo" />} title="Page not found" action={<Link to="/">Go home →</Link>}>
       The page you're looking for doesn't exist.
     </EmptyState>
   );

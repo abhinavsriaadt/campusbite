@@ -37,22 +37,20 @@
 .auth__media { display: none; }
 .auth__panel { position: relative; display: flex; flex-direction: column; align-items: center; padding: var(--s-5) var(--gutter) var(--s-7); }
 .auth__theme { position: absolute; top: var(--s-3); right: var(--s-3); }
-.auth__brand { align-self: flex-start; margin-bottom: var(--s-6); }
+.auth__brand { align-self: flex-start; display: inline-flex; min-height: var(--control-h); align-items: center; margin-bottom: var(--s-5); }
 .auth__card { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: var(--s-2); }
 .auth__title { font-size: var(--fs-2xl); }
 .auth__form { margin: var(--s-4) 0; }
 @media (min-width: 960px) {
   .auth { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .auth__media { display: block; position: sticky; top: 0; height: 100dvh; overflow: hidden; background: var(--neutral-50); }
-  .auth__media img { width: 100%; height: 100%; object-fit: cover; }
+  .auth__media > img { width: 100%; height: 100%; object-fit: cover; }
   .auth__media::after { content: ""; position: absolute; inset: 0; background: var(--scrim-auth); }
   .auth__media-copy { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; padding: var(--s-7); color: var(--on-brand); }
   .auth__media-copy h1 { color: var(--on-brand); font-size: var(--fs-3xl); max-width: 16ch; }
   .auth__media-copy p { margin-top: var(--s-3); max-width: 42ch; opacity: .9; font-size: var(--fs-lg); }
   .auth__panel { justify-content: center; padding: var(--s-7) var(--s-6); }
-  .auth__brand { display: none; }
 }
-.brand--light { color: var(--on-brand); }
 .demo { margin-top: var(--s-4); padding: var(--s-4); border-radius: var(--r-md); background: var(--bg); display: flex; flex-direction: column; gap: var(--s-1); }
 .demo__row { display: flex; justify-content: space-between; gap: var(--s-3); min-height: var(--control-h); align-items: center; padding: 0 var(--s-2); border-radius: var(--r-sm); font-size: var(--fs-sm); text-align: left; }
 .demo__row:hover { background: var(--neutral-50); }
@@ -207,7 +205,7 @@
 .dcard__route li .grow { display: flex; flex-direction: column; gap: 2px; }
 .dcard__pin { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: none; }
 .dcard__pin--from { background: var(--neutral-50); color: var(--ink-900); }
-.dcard__pin--to { background: var(--brand-50); color: var(--brand-text); }
+.dcard__pin--to { background: var(--brand-50); color: var(--brand-text-tint); }
 .dcard__place { font-size: var(--fs-lg); font-weight: 700; color: var(--ink-900); }
 .dcard__addr { color: var(--ink-700); }
 .dcard__tel { display: inline-flex; align-items: center; gap: var(--s-2); min-height: var(--tap-partner); font-weight: 700; font-size: var(--fs-md); color: var(--brand-text); }
@@ -274,7 +272,7 @@
 .verify { display: flex; flex-direction: column; gap: var(--s-2); }
 .verify__icon {
   display: inline-grid; place-items: center; width: var(--s-7); height: var(--s-7); margin-bottom: var(--s-2);
-  border-radius: var(--r-pill); background: var(--brand-50); color: var(--brand-text);
+  border-radius: var(--r-pill); background: var(--brand-50); color: var(--brand-text-tint);
   transition: background-color var(--t-base) var(--ease), color var(--t-base) var(--ease);
 }
 .verify__icon--done { background: var(--success-50); color: var(--success-text); }
@@ -336,3 +334,14 @@
   margin-inline: calc(var(--s-3) * -1); padding-inline: var(--s-3); border-radius: var(--r-sm);
 }
 .linkbtn--inline { min-height: 0; display: inline; text-decoration: underline; }
+
+/* ---- Brand: session splash and 404 ---- */
+.splash { min-height: 60vh; display: grid; place-items: center; }
+.splash__mark { animation: splash-pulse 1.6s var(--ease) infinite; }
+@keyframes splash-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.94); opacity: .75; } }
+@media (prefers-reduced-motion: reduce) { .splash__mark { animation: none; } }
+.empty__logo { margin-bottom: var(--s-2); }
+.sg-brand { display: grid; gap: var(--s-4); }
+@media (min-width: 900px) { .sg-brand { grid-template-columns: 1fr 1fr; } }
+.sg-brand__panel { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-5); border-radius: var(--r-lg); background: var(--bg); color: var(--ink-900); border: 1px solid var(--line); }
+.sg-brand__panel--brand { background: var(--brand-fill); color: var(--on-brand); flex-direction: row; align-items: center; border: 0; }

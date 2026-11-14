@@ -418,7 +418,7 @@ It also checks role-based redirects, the mobile tab bar, dark mode with no horiz
 
 ### Design system
 
-Frontend styling follows [DESIGN.md](DESIGN.md). All colours, spacing, type and motion come from `frontend/src/styles/tokens.css`, and reusable components live in `frontend/src/components/ui/`. In development, http://localhost:5173/styleguide renders every component and state in either theme. The route isn't included in production builds.
+Frontend styling follows [DESIGN.md](DESIGN.md). The brand is Tandoor orange `#B9452E` (flame `#F09075` for brand text in dark mode). The logo suite lives in `frontend/src/assets/brand/` and is rendered through `<Logo variant="full" | "mark">` and `<LogoMonoWhite>`, which pick the light or dark artwork from the theme. The favicon, apple-touch icon and web manifest are in `frontend/public/`. OTP emails use the PNG logo from `FRONTEND_URL/icons/logo-on-light@2x.png`, because most mail clients block SVG. All colours, spacing, type and motion come from `frontend/src/styles/tokens.css`, and reusable components live in `frontend/src/components/ui/`. In development, http://localhost:5173/styleguide renders every component and state in either theme. The route isn't included in production builds.
 
 Accessibility: every text/background token pair is at least 4.5:1 in both themes, touch targets are at least 44 px (48 px on the delivery-partner screens), and every control has an accessible name. Where DESIGN.md had to bend to meet the capstone requirements or its own accessibility rules, the reason is listed in its "Deviations" table.
 

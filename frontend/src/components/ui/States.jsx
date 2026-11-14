@@ -1,5 +1,6 @@
 import Button from "./Button";
 import Icon from "./Icon";
+import Logo from "./Logo";
 
 export function Spinner({ small, label = "Loading" }) {
   return <span className={`spinner${small ? " spinner--sm" : ""}`} role="progressbar" aria-label={label} />;
@@ -15,10 +16,21 @@ export function PageLoader({ label = "Loading…" }) {
 }
 
 /** One line icon, one sentence, one action (DESIGN.md §3). */
-export function EmptyState({ icon = "package", title, children, action, className = "" }) {
+/** Full-height brand splash while the session is checked: the mark with a gentle pulse. */
+export function Splash({ label = "Loading…" }) {
+  return (
+    <div className="splash" role="status">
+      <Logo variant="mark" height={56} className="splash__mark" decorative />
+      <span className="sr-only">{label}</span>
+    </div>
+  );
+}
+
+/** `media` replaces the icon (e.g. the logo on the 404 page). */
+export function EmptyState({ icon = "package", media, title, children, action, className = "" }) {
   return (
     <div className={`empty ${className}`}>
-      <span className="empty__icon"><Icon name={icon} /></span>
+      {media || <span className="empty__icon"><Icon name={icon} /></span>}
       {title && <h3>{title}</h3>}
       {children && <p>{children}</p>}
       {action}

@@ -8,7 +8,9 @@
 a.brand { min-height: var(--control-h); }
 /* Delivery partners: every control is a 48px tap target (DESIGN.md §4/§7). */
 .app--partner { --control-h: var(--tap-partner); --control-sm: var(--tap-partner); }
-.brand__mark { width: 32px; height: 32px; border-radius: var(--r-sm); display: grid; place-items: center; background: var(--brand-fill); color: var(--on-brand); font-size: var(--fs-md); }
+.logo { display: block; flex: none; max-width: none; }
+.brand__compact { display: none; }
+@media (max-width: 639px) { .brand__full { display: none; } .brand__compact { display: block; } }
 
 /* ---------------------------------------------------------------- top nav */
 .topnav { position: sticky; top: 0; z-index: var(--z-nav); background: var(--surface); border-bottom: 1px solid var(--line); transition: var(--theme-transition); }
@@ -59,7 +61,7 @@ a.brand { min-height: var(--control-h); }
   .sidebar .brand { padding: 0 var(--s-3); }
   .sidebar__nav { display: flex; flex-direction: column; gap: var(--s-1); }
   .sidebar__link { min-height: var(--control-h); padding: 0 var(--s-3); border-radius: var(--r-md); }
-  .sidebar__link.is-active { color: var(--brand-text); background: var(--brand-50); }
+  .sidebar__link.is-active { color: var(--brand-text-tint); background: var(--brand-50); }
   .sidebar__link.is-active::before { content: ""; position: absolute; left: calc(-1 * var(--s-3)); top: var(--s-2); bottom: var(--s-2); width: 2px; border-radius: 0 2px 2px 0; background: var(--brand-500); }
   .sidebar__foot .icon-btn { width: 100%; justify-content: start; grid-auto-flow: column; gap: var(--s-2); padding: 0 var(--s-3); font-size: var(--fs-sm); font-weight: 600; color: var(--ink-500); }
   .sidebar__foot { margin-top: auto; display: flex; flex-direction: column; gap: var(--s-2); border-top: 1px solid var(--line); padding-top: var(--s-3); }

@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ROLE_HOME } from "../utils/constants";
-import { PageLoader } from "./ui";
+import { Splash } from "./ui";
 
 /**
  * Route guard. Unauthenticated users go to /login (and come back afterwards);
@@ -12,7 +12,7 @@ export default function ProtectedRoute({ roles }) {
   const { user, ready } = useAuth();
   const location = useLocation();
 
-  if (!ready) return <PageLoader label="Checking your session…" />;
+  if (!ready) return <Splash label="Checking your session…" />;
   if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
   if (roles && !roles.includes(user.role)) return <Navigate to={ROLE_HOME[user.role] || "/"} replace />;
   return <Outlet />;

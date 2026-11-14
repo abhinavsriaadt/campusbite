@@ -51,7 +51,7 @@ def render_otp_email(name: str, purpose: str, code: str) -> tuple[str, str, str]
     )
     body = Template((_TEMPLATES / "otp.html").read_text(encoding="utf-8")).substitute(
         name=esc(name), intro=esc(c["intro"]), code=esc(code), outro=esc(outro), extra_html=extra_html,
-        frontend_url=esc(s.FRONTEND_URL),
+        frontend_url=esc(s.FRONTEND_URL.rstrip("/")),
     )
     return c["subject"], body, text
 

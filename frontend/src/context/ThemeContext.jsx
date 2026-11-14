@@ -25,8 +25,8 @@ function apply(resolved) {
   root.dataset.theme = resolved;
   // Match the mobile browser bar to the page background.
   const bg = getComputedStyle(root).getPropertyValue("--bg").trim();
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta && bg) meta.setAttribute("content", bg);
+  // Both theme-color metas (light/dark media) follow the chosen theme, so a manual choice wins over the OS.
+  if (bg) document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute("content", bg));
 }
 
 export function ThemeProvider({ children }) {

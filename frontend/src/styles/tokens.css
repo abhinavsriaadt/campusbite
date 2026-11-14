@@ -1,30 +1,31 @@
 /*
  * CampusBite design tokens — the single source for colour, type, spacing, shape and motion.
- * The light block and the [data-theme="dark"] block use exactly the values in DESIGN.md §2.
+ * The light block and the [data-theme="dark"] block use exactly the values in DESIGN.md §2
+ * (brand: "Tandoor orange" #B9452E, with "flame" #F09075 for brand text in dark mode).
  * Components must use these variables; never hard-code colours, spacing or font sizes.
  * The theme attribute is set before first paint by the inline script in index.html and kept
  * in sync by ThemeContext (light | dark | system, stored as `cb_theme`).
  */
-:root {
-  /* Brand */
-  --brand-500: #E8492F;   /* "Chili" — accents, active indicator, focus, charts */
-  --brand-600: #C93A22;   /* hover / pressed */
-  --brand-50:  #FDEEEA;   /* tinted backgrounds, selected chips */
+:root, [data-theme="light"] {
+  /* Brand — "Tandoor orange" */
+  --brand-500: #B9452E;   /* primary fills, active indicator, focus, charts */
+  --brand-600: #9E3A26;   /* hover / pressed */
+  --brand-50:  #F6E2DA;   /* tinted backgrounds, selected chips */
 
   /* Neutrals (warm) */
-  --ink-900: #1B1B1F;     /* headings */
+  --ink-900: #121113;     /* headings */
   --ink-700: #3A3A42;     /* body text */
-  --ink-500: #6B6B76;     /* secondary text, captions */
+  --ink-500: #5F5B63;     /* secondary text, captions */
   --ink-300: #B9B8BF;     /* placeholders, disabled */
   --line:    #E7E5E0;     /* borders, dividers */
-  --bg:      #F7F6F3;     /* page background */
+  --bg:      #F7F4EE;     /* page background */
   --surface: #FFFFFF;     /* cards */
 
-  --brand-text: #C93A22;  /* brand-coloured text/links */
-  --on-brand:   #FFFFFF;  /* text on brand fill */
+  --brand-text: #B9452E;  /* brand-coloured text/links */
+  --on-brand:   #F5F3EF;  /* text on brand fill */
 
   /* Semantic: base (icons, borders) / -50 (chip bg) / -text (chip text) */
-  --success: #1E9E5A;  --success-50: #E6F5EC;  --success-text: #14693C;
+  --success: #2E7D46;  --success-50: #E6F5EC;  --success-text: #14693C;
   --warning: #D98E04;  --warning-50: #FDF3DC;  --warning-text: #8A5A00;
   --danger:  #D92D3A;  --danger-50:  #FCE8EA;  --danger-text:  #A11F2A;
   --info:    #2F6FEB;  --info-50:    #E8EFFD;  --info-text:    #1F4FB0;
@@ -32,7 +33,7 @@
   --veg:     #1E9E5A;  --nonveg:     #B3261E;
 
   /* Elevation extras */
-  --surface-2: #FFFFFF;   /* modals, sheets, dropdowns, inputs, hovered cards */
+  --surface-2: #EFEAE2;   /* modals, sheets, dropdowns, inputs, hovered cards */
   --overlay: rgba(27,27,31,.45);
   --img-dim: 1;           /* image brightness multiplier */
 
@@ -57,10 +58,12 @@
   --t-fast: 120ms; --t-base: 200ms; --t-slow: 320ms;
 
   /* ---- Extensions (not in DESIGN.md §2) ----
-   * Filled brand buttons: white on --brand-500 is 3.87:1 (light) / 3.56:1 (dark), below the
-   * §7 minimum of 4.5:1, so fills use this darker chili in both themes (5.11:1). See DESIGN.md
-   * "Deviations". --brand-500 is still used for indicators, focus, charts and borders. */
-  --brand-fill: #C93A22;  --brand-fill-hover: #A62C17;
+   * Filled brand buttons use --brand-500 (--on-brand on it is 4.79:1). Hover goes darker in both
+   * themes: the dark-mode --brand-600 (#CC5640) would drop --on-brand to 3.81:1. */
+  --brand-fill: var(--brand-500);  --brand-fill-hover: #9E3A26;
+  /* Brand text on tinted backgrounds (--brand-50 chips, --surface-2 panels): --brand-text is
+   * 4.25:1 / 4.44:1 there in light mode, so it steps to #9E3A26 (5.3:1+). Dark: same as --brand-text. */
+  --brand-text-tint: #9E3A26;
   /* Same reason for solid success/danger fills (Approve, Delete, "good" rating chip, switch on):
    * the dark -text shades are light, so fills keep these deep shades in both themes. */
   --success-fill: #14693C; --success-fill-hover: #0F5530;
@@ -102,8 +105,8 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --brand-500: #EE5235;  --brand-600: #FF6A4D;  --brand-50: #3A1D17;
-  --brand-text: #FF8A6E;  --on-brand: #FFFFFF;
+  --brand-500: #B9452E;  --brand-600: #CC5640;  --brand-50: #361E18;
+  --brand-text: #F09075;  --on-brand: #F5F3EF;   /* "flame" for brand text */
 
   --bg:        #121113;
   --surface:   #1B1A1D;
@@ -111,10 +114,10 @@
   --line:      #2F2D32;
   --ink-900:   #F5F3EF;
   --ink-700:   #D9D6D0;
-  --ink-500:   #A3A0A8;
+  --ink-500:   #A3A0A7;
   --ink-300:   #6C6A72;
 
-  --success: #3CC47C;  --success-50: #12301F;  --success-text: #6FE0A3;
+  --success: #67C182;  --success-50: #12301F;  --success-text: #6FE0A3;
   --warning: #F0B23A;  --warning-50: #33270D;  --warning-text: #FFCF6E;
   --danger:  #FF5C66;  --danger-50:  #3A1518;  --danger-text:  #FF8F96;
   --info:    #5B8EF5;  --info-50:    #16233F;  --info-text:    #93B6FF;
@@ -128,6 +131,7 @@
   --img-dim: .9;
 
   /* Extensions, dark values */
+  --brand-text-tint: var(--brand-text);
   --img-scrim: linear-gradient(180deg, rgba(18,17,19,0) 40%, rgba(18,17,19,.85) 100%);
   --skel-base: var(--surface-2);
   --skel-hi: var(--line);

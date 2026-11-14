@@ -256,7 +256,9 @@ def test_email_templates(purpose, subject, line):
     assert subj == subject
     assert "042137" in html and "042137" in text and "Hi Neha," in text and line in text
     assert "It expires in 5 minutes." in text and "— Team CampusBite" in text
-    assert "letter-spacing:6px" in html and "#E8492F" in html
+    assert "letter-spacing:6px" in html and "#B9452E" in html
+    # PNG logo (email clients block SVG), served by the frontend at FRONTEND_URL
+    assert '<img src="http://localhost:5173/icons/logo-on-light@2x.png" width="210" height="40" alt="CampusBite"' in html
 
 
 def test_email_send_failure_never_breaks_the_request(client, settings, monkeypatch):

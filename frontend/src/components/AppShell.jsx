@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
-import { ROLE_LABEL } from "../utils/constants";
+import { ROLE_HOME, ROLE_LABEL } from "../utils/constants";
 import { useTheme } from "../context/ThemeContext";
-import { Avatar, Button, Icon, ThemeChoice, ThemeToggle } from "./ui";
+import { Avatar, Button, Icon, Logo, ThemeChoice, ThemeToggle } from "./ui";
 
 const NAV = {
   customer: [
@@ -25,11 +25,16 @@ const NAV = {
   ],
 };
 
-function Brand() {
+/** Logo linking to the signed-in role's home. Top bar: full wordmark, or the mark under 640px.
+ *  Sidebar: mark + name. */
+function Brand({ to = "/", sidebar = false }) {
   return (
-    <Link to="/" className="brand" aria-label="CampusBite home">
-      <span className="brand__mark" aria-hidden>C</span>
-      <span className="brand__name">CampusBite</span>
+    <Link to={to} className="brand" aria-label="CampusBite home">
+      {sidebar ? (
+        <><Logo variant="mark" height={32} decorative /><span className="brand__name">CampusBite</span></>
+      ) : (
+        <><Logo height={28} className="brand__full" decorative /><Logo variant="mark" height={32} className="brand__compact" decorative /></>
+      )}
     </Link>
   );
 }
@@ -127,6 +132,7 @@ export default function AppShell({ children }) {
   const cart = useCart();
   const navigate = useNavigate();
   const role = user?.role;
+  const home = ROLE_HOME[role] || "/";
   const items = NAV[role] || [];
   const isOwner = role === "restaurant_owner";
   const isCustomerish = !user || role === "customer";
@@ -138,7 +144,7 @@ export default function AppShell({ children }) {
 
       {isOwner && (
         <aside className="sidebar" aria-label="Restaurant navigation">
-          <Brand />
+          <Brand to={home} sidebar />
           <nav className="sidebar__nav"><NavItems items={items} cart={cart} variant="sidebar" /></nav>
           <div className="sidebar__foot">
             <NavLink to="/owner/settings" className={({ isActive }) => `sidebar__link${isActive ? " is-active" : ""}`}>
@@ -152,7 +158,7 @@ export default function AppShell({ children }) {
 
       <header className={`topnav${isOwner ? " topnav--owner" : ""}`}>
         <div className="topnav__inner">
-          <Brand />
+          <Brand to={home} />
           {isCustomerish && <NavSearch />}
           {!isOwner && items.length > 0 && (
             <nav className="topnav__links" aria-label="Main">

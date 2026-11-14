@@ -25,27 +25,40 @@ The look and logo are our own. Don't copy any brand's logo, exact colors, or ill
 
 ## 2. Design tokens — create `src/styles/tokens.css`
 
+**Brand:** Tandoor orange `#B9452E`, with flame `#F09075` for brand text in dark mode. The logo suite (wordmark on light/dark, mono white, mark, app icons) is final artwork in `brand/`; use it as-is through `<Logo>` / `<LogoMonoWhite>`.
+
+| Role | Light | Dark |
+|---|---|---|
+| Brand fill (`--brand-500`) | `#B9452E` Tandoor orange | `#B9452E` |
+| Hover (`--brand-600`) | `#9E3A26` | `#CC5640` (indicators only; button hover stays `#9E3A26`) |
+| Tint (`--brand-50`) | `#F6E2DA` | `#361E18` |
+| Brand text (`--brand-text`) | `#B9452E` | `#F09075` flame |
+| Text on brand (`--on-brand`) | `#F5F3EF` (4.79:1 on `#B9452E`) | `#F5F3EF` |
+| Page / card / raised (`--bg` / `--surface` / `--surface-2`) | `#F7F4EE` / `#FFFFFF` / `#EFEAE2` | `#121113` / `#1B1A1D` / `#242327` |
+| Headings / secondary (`--ink-900` / `--ink-500`) | `#121113` / `#5F5B63` | `#F5F3EF` / `#A3A0A7` |
+| Success | `#2E7D46` | `#67C182` |
+
 ```css
 :root {
   /* Brand */
-  --brand-500: #E8492F;   /* "Chili" — primary actions, active tab, cart badge */
-  --brand-600: #C93A22;   /* hover / pressed */
-  --brand-50:  #FDEEEA;   /* tinted backgrounds, selected chips */
+  --brand-500: #B9452E;   /* "Tandoor orange" — primary actions, active tab, cart badge */
+  --brand-600: #9E3A26;   /* hover / pressed */
+  --brand-50:  #F6E2DA;   /* tinted backgrounds, selected chips */
 
   /* Neutrals (warm) */
-  --ink-900: #1B1B1F;     /* headings */
+  --ink-900: #121113;     /* headings */
   --ink-700: #3A3A42;     /* body text */
-  --ink-500: #6B6B76;     /* secondary text, captions */
+  --ink-500: #5F5B63;     /* secondary text, captions */
   --ink-300: #B9B8BF;     /* placeholders, disabled */
   --line:    #E7E5E0;     /* borders, dividers */
-  --bg:      #F7F6F3;     /* page background (warm off-white) */
+  --bg:      #F7F4EE;     /* page background (warm off-white) */
   --surface: #FFFFFF;     /* cards, modals */
 
-  --brand-text: #C93A22;  /* brand-colored text/links (passes contrast) */
-  --on-brand:   #FFFFFF;  /* text on brand fill */
+  --brand-text: #B9452E;  /* brand-colored text/links (passes contrast) */
+  --on-brand:   #F5F3EF;  /* text on brand fill */
 
   /* Semantic: base (icons, borders) / -50 (chip bg) / -text (chip text) */
-  --success: #1E9E5A;  --success-50: #E6F5EC;  --success-text: #14693C;
+  --success: #2E7D46;  --success-50: #E6F5EC;  --success-text: #14693C;
   --warning: #D98E04;  --warning-50: #FDF3DC;  --warning-text: #8A5A00;
   --danger:  #D92D3A;  --danger-50:  #FCE8EA;  --danger-text:  #A11F2A;
   --info:    #2F6FEB;  --info-50:    #E8EFFD;  --info-text:    #1F4FB0;
@@ -53,7 +66,7 @@ The look and logo are our own. Don't copy any brand's logo, exact colors, or ill
   --veg:     #1E9E5A;  --nonveg:     #B3261E;
 
   /* Elevation extras (used mainly by dark mode) */
-  --surface-2: #FFFFFF;   /* modals, sheets, dropdowns */
+  --surface-2: #EFEAE2;   /* modals, sheets, dropdowns */
   --overlay: rgba(27,27,31,.45);
   --img-dim: 1;           /* image brightness multiplier */
 
@@ -88,8 +101,8 @@ Goal: a warm, deep "night kitchen" look. It shouldn't be pure black or a simple 
   color-scheme: dark;                 /* native scrollbars, inputs, date pickers */
 
   /* Brand — fill stays rich; text variant is lifted for contrast */
-  --brand-500: #EE5235;  --brand-600: #FF6A4D;  --brand-50: #3A1D17;
-  --brand-text: #FF8A6E;  --on-brand: #FFFFFF;
+  --brand-500: #B9452E;  --brand-600: #CC5640;  --brand-50: #361E18;
+  --brand-text: #F09075;  --on-brand: #F5F3EF;   /* flame for brand text */
 
   /* Warm charcoal neutrals (never #000) */
   --bg:        #121113;   /* page */
@@ -98,11 +111,11 @@ Goal: a warm, deep "night kitchen" look. It shouldn't be pure black or a simple 
   --line:      #2F2D32;
   --ink-900:   #F5F3EF;   /* headings (warm off-white, not #FFF) */
   --ink-700:   #D9D6D0;   /* body */
-  --ink-500:   #A3A0A8;   /* secondary */
+  --ink-500:   #A3A0A7;   /* secondary */
   --ink-300:   #6C6A72;   /* placeholders, disabled */
 
   /* Semantic: desaturated-bright text on deep tinted chips */
-  --success: #3CC47C;  --success-50: #12301F;  --success-text: #6FE0A3;
+  --success: #67C182;  --success-50: #12301F;  --success-text: #6FE0A3;
   --warning: #F0B23A;  --warning-50: #33270D;  --warning-text: #FFCF6E;
   --danger:  #FF5C66;  --danger-50:  #3A1518;  --danger-text:  #FF8F96;
   --info:    #5B8EF5;  --info-50:    #16233F;  --info-text:    #93B6FF;
@@ -324,7 +337,7 @@ Images: seed data uses the `image_url` values in `backend/seed_data.json`.
 | ETA on the live order card | No ETA data exists | "Updated N min ago" from the real status timestamp |
 | My Orders = Active/Past tabs only | Brief requires filtering by status **and date** | Tabs plus the status/date FilterBar |
 | Partner screens without filters | Brief requires filtering deliveries by status | Status FilterBar kept |
-| Filled buttons use `--brand-500` | §7 requires ≥ 4.5:1, but white on `--brand-500` is 3.87:1 (light) and 3.56:1 (dark) | All §2 values are unchanged. Fills use an added `--brand-fill` (#C93A22, 5.11:1) in both themes, plus `--success-fill` / `--danger-fill` for solid success/danger buttons, because the dark `-text` shades are too light to carry white text. `--brand-500` stays for indicators, focus, borders and charts |
+| Brand text on tints (`--brand-50`, `--surface-2`) | `#B9452E` text is 4.25:1 on `#F6E2DA` and 4.44:1 on `#EFEAE2` (light), below §7's 4.5:1 | All §2 values are unchanged. Selected chips, the active sidebar link, brand badges, the pager, tab counts and avatars use an added `--brand-text-tint` (`#9E3A26` in light, ≥ 5.3:1; same as `--brand-text` in dark). Buttons fill with `--brand-500` (`--on-brand` 4.79:1) and hover to `#9E3A26` in both themes, because dark `--brand-600` `#CC5640` gives only 3.81:1 |
 | Skeleton shimmer `--surface → --surface-2 → --surface` (dark) | A skeleton inside a card would have the same colour as the card, so it would be invisible | Skeleton blocks are `--surface-2` with a `--line` shimmer in dark mode |
 | Seed images from `backend/seed_data.json` | The final dataset is `backend/seed_data_lucknow.json` | Its loremflickr `image_url` values are used as-is; if the host fails, the brand placeholder shows |
 | Menu price-range chips | Fixed price bands would be hard-coded prices in the UI | Min/max inputs whose hints show the menu's real price range from the API |
